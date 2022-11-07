@@ -1,0 +1,8 @@
+.idea/*
+data
+keyfile
+Dockerfile
+docker-compose.yml
+Makefile
+config.json
+README.md

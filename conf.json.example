@@ -1,0 +1,23 @@
+{
+    "MongoDB": {
+      "URI": "<MONGODB_URI>",
+      "DB": "<DATABASE_NAME>"
+    },
+    "Logger": {
+      "DisableCaller": false,
+      "DisableStacktrace": false,
+      "Encoding": "json",
+      "Level": "info"
+    },
+    "TokenSecret": "<HASH_SALT_STRING>",
+    "RootAdmin": "<MASTER_ADMIN_NAME>",
+    "RootPassword": "<MASTER_ADMIN_PASSWORD>",
+    "RootEmail": "<MASTER_ADMIN_EMAIL>",
+    "RootGroup": "<MASTER_ADMIN_GROUP>",
+    "Registration": "<ON | OFF>",
+    "Port": "8081",
+    "HTTPS": "OFF",
+    "Cert": "file/path/to/cert.pem",
+    "Key": "file/path/to/cert.pem",
+    "ENV": "<development | production | test>"
+}

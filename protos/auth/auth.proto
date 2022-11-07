@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package authService;
+option go_package = ".;authService";
+
+message User {
+  string Id = 1;
+  string Username = 2;
+  string FirstName = 3;
+  string LastName = 4;
+  string Email = 5;
+  string Role = 6;
+  bool RootAdmin = 7;
+  string GroupId = 8;
+  string ImageId = 9;
+  google.protobuf.Timestamp LastModified = 10;
+  google.protobuf.Timestamp CreatedAt = 11;
+  google.protobuf.Timestamp DeletedAt = 12;
+}
+
+message Empty {}
+
+message RegisterReq {
+  string FirstName = 1;
+  string LastName = 2;
+  string Email = 3;
+  string Username = 4;
+  string Password = 5;
+}
+
+message RegisterRes {
+  User User = 1;
+  string AccessToken = 2;
+}
+
+
+message LoginReq {
+  string Email = 1;
+  string Password = 2;
+}
+
+message LoginRes {
+  User User = 1;
+  string AccessToken = 2;
+}
+
+
+message LogoutReq {
+  string AccessToken = 1;
+}
+
+message LogoutRes {
+  int64 Status = 1;
+}
+
+
+message RefreshReq {
+  string AccessToken = 1;
+}
+
+message RefreshRes {
+  string AccessToken = 1;
+}
+
+
+message GenerateKeyReq {
+  string AccessToken = 1;
+}
+
+message GenerateKeyRes {
+  string APIKey = 1;
+}
+
+
+message UpdatePasswordReq {
+  string NewPassword = 1;
+  string CurrentPassword = 2;
+}
+
+message UpdatePasswordRes {
+  int64 Status = 1;
+}
+
+service AuthService {
+  rpc Register(RegisterReq) returns (RegisterRes) {}
+  rpc Login(LoginReq) returns (LoginRes) {}
+  rpc Logout(LogoutReq) returns (LogoutRes) {}
+  rpc Refresh(RefreshReq) returns (RefreshRes) {}
+  rpc GenerateKey(GenerateKeyReq) returns (GenerateKeyRes) {}
+  rpc UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordRes) {}
+}
