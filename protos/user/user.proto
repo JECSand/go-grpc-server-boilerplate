@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package usersService;
+option go_package = ".;usersService";
+
+message User {
+  string Id = 1;
+  string Username = 2;
+  string Password = 3;
+  string FirstName = 4;
+  string LastName = 5;
+  string Email = 6;
+  string Role = 7;
+  bool RootAdmin = 8;
+  string GroupId = 9;
+  string ImageId = 10;
+  google.protobuf.Timestamp LastModified = 11;
+  google.protobuf.Timestamp CreatedAt = 12;
+  google.protobuf.Timestamp DeletedAt = 13;
+}
+
+message Empty {}
+
+message CreateReq {
+  string Username = 1;
+  string Password = 2;
+  string FirstName = 3;
+  string LastName = 4;
+  string Email = 5;
+  string Role = 6;
+  bool RootAdmin = 7;
+  string GroupId = 8;
+}
+
+message CreateRes {
+  User User = 1;
+}
+
+message UpdateReq {
+  string Id = 1;
+  string Username = 2;
+  string Password = 3;
+  string FirstName = 4;
+  string LastName = 5;
+  string Email = 6;
+  string Role = 7;
+  bool RootAdmin = 8;
+  string GroupId = 9;
+}
+
+message UpdateRes {
+  User User = 1;
+}
+
+message GetReq {
+  string Id = 1;
+}
+
+message GetRes {
+  User User = 1;
+}
+
+message GetGroupUsersReq {
+  string GroupId = 1;
+  int64 Page = 2;
+  int64 Size = 3;
+}
+
+message GetGroupUsersRes {
+  int64 TotalCount = 1;
+  int64 TotalPages = 2;
+  int64 Page = 3;
+  int64 Size = 4;
+  bool HasMore = 5;
+  repeated User Users = 6;
+}
+
+message FindReq {
+  string Query = 1;
+  int64 Page = 2;
+  int64 Size = 3;
+}
+
+message FindRes {
+  int64 TotalCount = 1;
+  int64 TotalPages = 2;
+  int64 Page = 3;
+  int64 Size = 4;
+  bool HasMore = 5;
+  repeated User Users = 6;
+}
+
+message DeleteReq {
+  string Id = 1;
+}
+
+message DeleteRes {
+  User User = 1;
+}
+
+message UploadImageReq {
+  string mime = 1;
+  bytes chunk = 2;
+}
+
+message UploadImageRes {
+  string Name = 1;
+}
+
+message DownloadImageReq {
+  string Id = 1;
+}
+
+message DownloadImageRes {
+  bytes chunk = 1;
+}
+
+service UserService {
+  rpc Create(CreateReq) returns (CreateRes) {}
+  rpc Update(UpdateReq) returns (UpdateRes) {}
+  rpc Get(GetReq) returns (GetRes) {}
+  rpc GetGroupUsers(GetGroupUsersReq) returns (GetGroupUsersRes) {}
+  rpc Find(FindReq) returns (FindRes) {}
+  rpc Delete(DeleteReq) returns (DeleteRes) {}
+  //rpc UploadImage(stream UploadImageReq) returns (UploadImageRes) {}
+  //rpc DownloadImage(DownloadImageReq) returns (stream DownloadImageRes) {}
+}

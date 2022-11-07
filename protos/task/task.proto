@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package tasksService;
+option go_package = ".;tasksService";
+
+enum TaskStatus {
+  UNSPECIFIED = 0;
+  NOT_STARTED = 1;
+  IN_PROGRESS = 2;
+  COMPLETED = 3;
+}
+
+message Task {
+  string Id = 1;
+  string Name = 2;
+  TaskStatus Status = 3;
+  google.protobuf.Timestamp Due = 4;
+  string Description = 5;
+  string UserId = 6;
+  string GroupId = 7;
+  google.protobuf.Timestamp LastModified = 8;
+  google.protobuf.Timestamp CreatedAt = 9;
+  google.protobuf.Timestamp DeletedAt = 10;
+}
+
+message Empty {}
+
+message CreateReq {
+  string Name = 1;
+  google.protobuf.Timestamp Due = 2;
+  string Description = 3;
+  string UserId = 4;
+  string GroupId = 5;
+}
+
+message CreateRes {
+  Task Task = 1;
+}
+
+message UpdateReq {
+  string Id = 1;
+  string Name = 2;
+  TaskStatus Status = 3;
+  google.protobuf.Timestamp Due = 4;
+  string Description = 5;
+  string UserId = 6;
+  string GroupId = 7;
+}
+
+message UpdateRes {
+  Task Task = 1;
+}
+
+message GetReq {
+  string Id = 1;
+}
+
+message GetRes {
+  Task Task = 1;
+}
+
+message GetUserTasksReq {
+  string UserId = 1;
+  int64 Page = 2;
+  int64 Size = 3;
+}
+
+message GetUserTasksRes {
+  int64 TotalCount = 1;
+  int64 TotalPages = 2;
+  int64 Page = 3;
+  int64 Size = 4;
+  bool HasMore = 5;
+  repeated Task Tasks = 6;
+}
+
+message GetGroupTasksReq {
+  string GroupId = 1;
+  int64 Page = 2;
+  int64 Size = 3;
+}
+
+message GetGroupTasksRes {
+  int64 TotalCount = 1;
+  int64 TotalPages = 2;
+  int64 Page = 3;
+  int64 Size = 4;
+  bool HasMore = 5;
+  repeated Task Tasks = 6;
+}
+
+message FindReq {
+  string Query = 1;
+  int64 Page = 2;
+  int64 Size = 3;
+}
+
+message FindRes {
+  int64 TotalCount = 1;
+  int64 TotalPages = 2;
+  int64 Page = 3;
+  int64 Size = 4;
+  bool HasMore = 5;
+  repeated Task Tasks = 6;
+}
+
+message DeleteReq {
+  string Id = 1;
+}
+
+message DeleteRes {
+  Task Task = 1;
+}
+
+message AssignUserReq {
+  string UserId = 1;
+}
+
+message AssignUserRes {
+  Task Task = 1;
+}
+
+message ChangeStatusReq {
+  TaskStatus Status = 1;
+}
+
+message ChangeStatusRes {
+  Task Task = 1;
+}
+
+service TaskService {
+  rpc Create(CreateReq) returns (CreateRes) {}
+  rpc Update(UpdateReq) returns (UpdateRes) {}
+  rpc Get(GetReq) returns (GetRes) {}
+  rpc Find(FindReq) returns (FindRes) {}
+  rpc Delete(DeleteReq) returns (DeleteRes) {}
+  rpc AssignUser(AssignUserReq) returns (AssignUserRes) {}
+  rpc ChangeStatus(ChangeStatusReq) returns (ChangeStatusRes) {}
+  rpc GetUserTasks(GetUserTasksReq) returns (GetUserTasksRes) {}
+  rpc GetGroupTasks(GetGroupTasksReq) returns (GetGroupTasksRes) {}
+}

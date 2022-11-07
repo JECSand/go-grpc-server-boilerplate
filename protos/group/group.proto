@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package groupsService;
+option go_package = ".;groupsService";
+
+message Group {
+  string Id = 1;
+  string Name = 2;
+  bool RootAdmin = 3;
+  google.protobuf.Timestamp LastModified = 11;
+  google.protobuf.Timestamp CreatedAt = 12;
+  google.protobuf.Timestamp DeletedAt = 13;
+}
+
+message Empty {}
+
+message CreateReq {
+  string Name = 1;
+  string RootAdmin = 2;
+}
+
+message CreateRes {
+  Group Group = 1;
+}
+
+message UpdateReq {
+  string Id = 1;
+  string Username = 2;
+  string Password = 3;
+  string FirstName = 4;
+  string LastName = 5;
+  string Email = 6;
+  string Role = 7;
+  bool RootAdmin = 8;
+  string GroupId = 9;
+}
+
+message UpdateRes {
+  Group Group = 1;
+}
+
+message GetReq {
+  string Id = 1;
+}
+
+message GetRes {
+  Group Group = 1;
+}
+
+message FindReq {
+  string Query = 1;
+  int64 Page = 2;
+  int64 Size = 3;
+}
+
+message FindRes {
+  int64 TotalCount = 1;
+  int64 TotalPages = 2;
+  int64 Page = 3;
+  int64 Size = 4;
+  bool HasMore = 5;
+  repeated Group Groups = 6;
+}
+
+message DeleteReq {
+  string Id = 1;
+}
+
+message DeleteRes {
+  Group Group = 1;
+}
+
+service GroupService {
+  rpc Create(CreateReq) returns (CreateRes) {}
+  rpc Update(UpdateReq) returns (UpdateRes) {}
+  rpc Get(GetReq) returns (GetRes) {}
+  rpc Find(FindReq) returns (FindRes) {}
+  rpc Delete(DeleteReq) returns (DeleteRes) {}
+}
