@@ -22,12 +22,12 @@ import (
 )
 
 func accessibleRoles() map[string][]string {
-	const laptopServicePath = "/techschool.pcbook.LaptopService/"
+	const userServicePath = "/techschool.pcbook.LaptopService/"
 
 	return map[string][]string{
-		laptopServicePath + "CreateLaptop": {"admin"},
-		laptopServicePath + "UploadImage":  {"admin"},
-		laptopServicePath + "RateLaptop":   {"admin", "user"},
+		userServicePath + "CreateLaptop": {"admin"},
+		userServicePath + "UploadImage":  {"admin"},
+		userServicePath + "RateLaptop":   {"admin", "user"},
 	}
 }
 
