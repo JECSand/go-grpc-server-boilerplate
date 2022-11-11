@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"os"
 	"time"
 )
@@ -11,7 +10,7 @@ import (
 type ServerConfig struct {
 	Port              string
 	Registration      string
-	SSL               bool
+	SSL               string
 	Timeout           time.Duration
 	ReadTimeout       time.Duration
 	WriteTimeout      time.Duration
@@ -78,7 +77,7 @@ func (c *Configuration) InitializeEnvironmentalVars() {
 	os.Setenv("ROOT_GROUP", c.RootGroup)
 	os.Setenv("REGISTRATION", c.Server.Registration)
 	os.Setenv("PORT", c.Server.Port)
-	os.Setenv("HTTPS", utilities.BoolToStr(c.Server.SSL))
+	os.Setenv("HTTPS", c.Server.SSL)
 	os.Setenv("CERT", c.Cert)
 	os.Setenv("KEY", c.Key)
 	os.Setenv("ENV", c.ENV)

@@ -1,11 +1,9 @@
-package auth
+package models
 
 import (
 	"errors"
 	"fmt"
-	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/dgrijalva/jwt-go"
-	"net/http"
 	"os"
 )
 
@@ -18,7 +16,7 @@ type TokenData struct {
 }
 
 // InitUserToken inputs a pointer to a user and returns TokenData
-func InitUserToken(u *models.User) (*TokenData, error) {
+func InitUserToken(u *User) (*TokenData, error) {
 	err := u.Validate("auth")
 	if err != nil {
 		return &TokenData{}, err
@@ -32,8 +30,8 @@ func InitUserToken(u *models.User) (*TokenData, error) {
 }
 
 // ToUser creates a new User struct using the TokenData and returns a pointer to it
-func (t *TokenData) ToUser() *models.User {
-	return &models.User{
+func (t *TokenData) ToUser() *User {
+	return &User{
 		Id:        t.UserId,
 		Role:      t.Role,
 		RootAdmin: t.RootAdmin,
@@ -42,8 +40,8 @@ func (t *TokenData) ToUser() *models.User {
 }
 
 // GetGroupsScope returns a scoped Group ID filter based on token User role
-func (t *TokenData) GetGroupsScope() *models.Group {
-	g := models.Group{Id: t.GroupId}
+func (t *TokenData) GetGroupsScope() *Group {
+	g := Group{Id: t.GroupId}
 	if t.RootAdmin {
 		g.Id = ""
 	}
@@ -51,8 +49,8 @@ func (t *TokenData) GetGroupsScope() *models.Group {
 }
 
 // GetUsersScope returns a scoped User ID filter based on token User role
-func (t *TokenData) GetUsersScope(scopeType string) *models.User {
-	g := models.User{Id: t.UserId, GroupId: t.GroupId, RootAdmin: t.RootAdmin, Role: t.Role}
+func (t *TokenData) GetUsersScope(scopeType string) *User {
+	g := User{Id: t.UserId, GroupId: t.GroupId, RootAdmin: t.RootAdmin, Role: t.Role}
 	if t.RootAdmin {
 		g.Id = ""
 		g.GroupId = ""
@@ -124,8 +122,7 @@ func DecodeJWT(curToken string) (*TokenData, error) {
 }
 
 // LoadTokenFromRequest inputs a http request and returns decrypted TokenData or an error
-func LoadTokenFromRequest(r *http.Request) (*TokenData, error) {
-	authToken := r.Header.Get("Auth-Token")
+func LoadTokenFromRequest(authToken string) (*TokenData, error) {
 	tokenData, err := DecodeJWT(authToken)
 	if err != nil {
 		return nil, err
@@ -134,8 +131,8 @@ func LoadTokenFromRequest(r *http.Request) (*TokenData, error) {
 }
 
 // VerifyGroupRequestScope inputs a Group http request and returns decrypted TokenData or an error
-func VerifyGroupRequestScope(r *http.Request, groupId string) (string, error) {
-	tokenData, err := LoadTokenFromRequest(r)
+func VerifyGroupRequestScope(authToken string, groupId string) (string, error) {
+	tokenData, err := LoadTokenFromRequest(authToken)
 	if err != nil {
 		return "", err
 	}
@@ -146,8 +143,8 @@ func VerifyGroupRequestScope(r *http.Request, groupId string) (string, error) {
 }
 
 // VerifyUserRequestScope inputs User http request and returns decrypted TokenData or an error
-func VerifyUserRequestScope(r *http.Request, userId string, scopeType string) (*models.User, error) {
-	tokenData, err := LoadTokenFromRequest(r)
+func VerifyUserRequestScope(authToken string, userId string, scopeType string) (*User, error) {
+	tokenData, err := LoadTokenFromRequest(authToken)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +163,8 @@ func VerifyUserRequestScope(r *http.Request, userId string, scopeType string) (*
 }
 
 // VerifyRequestScope inputs generic http requests and returns decrypted TokenData or an error
-func VerifyRequestScope(r *http.Request, scopeType string) (*models.User, error) {
-	tokenData, err := LoadTokenFromRequest(r)
+func VerifyRequestScope(authToken string, scopeType string) (*User, error) {
+	tokenData, err := LoadTokenFromRequest(authToken)
 	if err != nil {
 		return nil, err
 	}
