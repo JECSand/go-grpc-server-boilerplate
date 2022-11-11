@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"github.com/JECSand/go-grpc-server-boilerplate/auth"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"time"
 )
@@ -20,7 +19,7 @@ func NewTokenService(uService UserDataService, gService GroupDataService, bServi
 }
 
 // verifyTokenUser verifies Token's User
-func (a *TokenService) verifyTokenUser(decodedToken *auth.TokenData) (bool, string) {
+func (a *TokenService) verifyTokenUser(decodedToken *models.TokenData) (bool, string) {
 	tUser := decodedToken.ToUser()
 	checkUser, err := a.uService.UserFind(tUser)
 	if err != nil {
@@ -42,7 +41,7 @@ func (a *TokenService) tokenVerifyMiddleWare(roleType string, authToken string) 
 	if a.bService.CheckTokenBlacklist(authToken) {
 		return false, errors.New("invalid token")
 	}
-	decodedToken, err := auth.DecodeJWT(authToken)
+	decodedToken, err := models.DecodeJWT(authToken)
 	if err != nil {
 		return false, err
 	}
@@ -68,7 +67,7 @@ func (a *TokenService) GenerateToken(u *models.User, tType string) (string, erro
 	if tType == "api" {
 		expDT = time.Now().Add(time.Hour * 4380).Unix() // 6 month expiration for api key
 	}
-	tData, err := auth.InitUserToken(u)
+	tData, err := models.InitUserToken(u)
 	if err != nil {
 		return "", err
 	}

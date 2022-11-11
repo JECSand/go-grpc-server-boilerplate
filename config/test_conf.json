@@ -2,7 +2,7 @@
   "Server": {
     "Port": ":5555",
     "Registration": "ON",
-    "SSL": false,
+    "SSL": "false",
     "Timeout": 15,
     "ReadTimeout": 5,
     "WriteTimeout": 5,

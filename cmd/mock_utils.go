@@ -1,37 +1,10 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 	"time"
 )
-
-// Execute test an http request
-func executeRequest(ta App, req *http.Request) *httptest.ResponseRecorder {
-	rr := httptest.NewRecorder()
-	ta.server.Router.ServeHTTP(rr, req)
-	return rr
-}
-
-// Check response code returned from a test http request
-func checkResponseCode(t *testing.T, expected, actual int) {
-	if expected != actual {
-		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
-	}
-}
-
-// signIn
-func signIn(ta App, email string, password string) *httptest.ResponseRecorder {
-	payload := []byte(`{"email":"` + email + `","password":"` + password + `"}`)
-	req, _ := http.NewRequest("POST", "/auth", bytes.NewBuffer(payload))
-	req.Header.Add("Content-Type", "application/json")
-	response := executeRequest(ta, req)
-	return response
-}
 
 // CreateTestGroup creates a group doc for test setup
 func createTestGroup(ta App, groupType int) *models.Group {
@@ -49,7 +22,7 @@ func createTestGroup(ta App, groupType int) *models.Group {
 		group.LastModified = time.Now().UTC()
 		group.CreatedAt = time.Now().UTC()
 	}
-	_, err := ta.server.GroupService.GroupDocInsert(&group)
+	_, err := ta.server.GroupDataService.GroupDocInsert(&group)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +57,7 @@ func createTestUser(ta App, userType int) *models.User {
 		user.LastModified = time.Now().UTC()
 		user.CreatedAt = time.Now().UTC()
 	}
-	_, err := ta.server.UserService.UserDocInsert(&user)
+	_, err := ta.server.UserDataService.UserDocInsert(&user)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +89,7 @@ func createTestTask(ta App, taskType int) *models.Task {
 		task.LastModified = now.UTC()
 		task.CreatedAt = now.UTC()
 	}
-	_, err := ta.server.TaskService.TaskDocInsert(&task)
+	_, err := ta.server.TaskDataService.TaskDocInsert(&task)
 	if err != nil {
 		panic(err)
 	}
