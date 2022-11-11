@@ -1,10 +1,9 @@
 package services
 
 import (
+	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/auth"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
-	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
-	"net/http"
 	"time"
 )
 
@@ -39,37 +38,27 @@ func (a *TokenService) verifyTokenUser(decodedToken *auth.TokenData) (bool, stri
 }
 
 // tokenVerifyMiddleWare inputs the route handler function along with User roleType to verify User token and permissions
-func (a *TokenService) tokenVerifyMiddleWare(roleType string, next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	var errorObject utilities.JWTError
-	authToken := r.Header.Get("Auth-Token")
+func (a *TokenService) tokenVerifyMiddleWare(roleType string, authToken string) (bool, error) {
 	if a.bService.CheckTokenBlacklist(authToken) {
-		errorObject.Message = "Invalid Token"
-		utilities.RespondWithError(w, http.StatusUnauthorized, errorObject)
-		return
+		return false, errors.New("invalid token")
 	}
-	decodedToken, err := auth.DecodeJWT(r.Header.Get("Auth-Token"))
+	decodedToken, err := auth.DecodeJWT(authToken)
 	if err != nil {
-		errorObject.Message = err.Error()
-		utilities.RespondWithError(w, http.StatusUnauthorized, errorObject)
-		return
+		return false, err
 	}
 	verified, verifyMsg := a.verifyTokenUser(decodedToken)
 	if verified {
 		if roleType == "Root" && decodedToken.RootAdmin {
-			next.ServeHTTP(w, r)
+			return false, nil
 		} else if roleType == "Admin" && decodedToken.Role == "admin" {
-			next.ServeHTTP(w, r)
+			return false, nil
 		} else if roleType == "Member" {
-			next.ServeHTTP(w, r)
+			return false, nil
 		} else {
-			errorObject.Message = "Invalid Token"
-			utilities.RespondWithError(w, http.StatusUnauthorized, errorObject)
-			return
+			return false, errors.New("invalid token")
 		}
 	} else {
-		errorObject.Message = verifyMsg
-		utilities.RespondWithError(w, http.StatusUnauthorized, errorObject)
-		return
+		return false, errors.New(verifyMsg)
 	}
 }
 
@@ -87,27 +76,18 @@ func (a *TokenService) GenerateToken(u *models.User, tType string) (string, erro
 }
 
 // RootAdminTokenVerifyMiddleWare is used to verify that the requester is a valid admin
-func (a *TokenService) RootAdminTokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		a.tokenVerifyMiddleWare("Root", next, w, r)
-		return
-	}
+func (a *TokenService) RootAdminTokenVerifyMiddleWare(authToken string) (bool, error) {
+	return a.tokenVerifyMiddleWare("Root", authToken)
 }
 
 // AdminTokenVerifyMiddleWare is used to verify that the requester is a valid admin
-func (a *TokenService) AdminTokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		a.tokenVerifyMiddleWare("Admin", next, w, r)
-		return
-	}
+func (a *TokenService) AdminTokenVerifyMiddleWare(authToken string) (bool, error) {
+	return a.tokenVerifyMiddleWare("Admin", authToken)
 }
 
 // MemberTokenVerifyMiddleWare is used to verify that a requester is authenticated
-func (a *TokenService) MemberTokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		a.tokenVerifyMiddleWare("Member", next, w, r)
-		return
-	}
+func (a *TokenService) MemberTokenVerifyMiddleWare(authToken string) (bool, error) {
+	return a.tokenVerifyMiddleWare("Member", authToken)
 }
 
 // BlacklistAuthToken is used to blacklist an unexpired token
