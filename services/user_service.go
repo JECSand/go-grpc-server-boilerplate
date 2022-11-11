@@ -34,7 +34,7 @@ func NewUserService(log utilities.Logger, ts *TokenService, u UserDataService, g
 func (u *UserService) Create(ctx context.Context, req *usersService.CreateReq) (*usersService.CreateRes, error) {
 	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Create")
 	//defer span.Finish()
-	user := models.LoadUseCreateProto(req)
+	user := models.LoadUserCreateProto(req)
 	// TODO NEXT FIX
 	/*
 		decodedToken, err := auth.DecodeJWT(r.Header.Get("Auth-Token"))

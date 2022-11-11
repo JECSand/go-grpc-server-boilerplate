@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/JECSand/go-grpc-server-boilerplate/config"
+	authsService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
 	usersService "github.com/JECSand/go-grpc-server-boilerplate/protos/user"
 	"github.com/JECSand/go-grpc-server-boilerplate/services"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
@@ -93,6 +94,8 @@ func (s *Server) Start() error {
 	)
 	userService := services.NewUserService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
 	usersService.RegisterUserServiceServer(grpcServer, userService)
+	authService := services.NewAuthService(s.log, s.TokenService, s.UserDataService, s.GroupDataService)
+	authsService.RegisterAuthServiceServer(grpcServer, authService)
 	go func() {
 		s.log.Infof("GRPC Server is listening on port: %s", s.cfg.Server.Port)
 		s.log.Fatal(grpcServer.Serve(l))

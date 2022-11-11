@@ -47,25 +47,11 @@ message LoginRes {
 }
 
 
-message LogoutReq {
-  string AccessToken = 1;
-}
-
 message LogoutRes {
   int64 Status = 1;
 }
 
-
-message RefreshReq {
-  string AccessToken = 1;
-}
-
 message RefreshRes {
-  string AccessToken = 1;
-}
-
-
-message GenerateKeyReq {
   string AccessToken = 1;
 }
 
@@ -86,8 +72,8 @@ message UpdatePasswordRes {
 service AuthService {
   rpc Register(RegisterReq) returns (RegisterRes) {}
   rpc Login(LoginReq) returns (LoginRes) {}
-  rpc Logout(LogoutReq) returns (LogoutRes) {}
-  rpc Refresh(RefreshReq) returns (RefreshRes) {}
-  rpc GenerateKey(GenerateKeyReq) returns (GenerateKeyRes) {}
+  rpc Logout(Empty) returns (LogoutRes) {}
+  rpc Refresh(Empty) returns (RefreshRes) {}
+  rpc GenerateKey(Empty) returns (GenerateKeyRes) {}
   rpc UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordRes) {}
 }

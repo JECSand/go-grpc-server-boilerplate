@@ -6,7 +6,6 @@ import (
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
 )
@@ -62,17 +61,11 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) error {
 	if !ok {
 		return nil // unprotected endpoint
 	}
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
+	accessToken, err := utilities.GetTokenFromContext(ctx)
+	if err != nil {
+		return err
 	}
-	values := md["authorization"]
-	if len(values) == 0 {
-		return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
-	}
-	accessToken := values[0]
 	var authorized bool
-	var err error
 	switch roleMap[0] {
 	case "Root":
 		authorized, err = i.tokenService.RootAdminTokenVerifyMiddleWare(accessToken)

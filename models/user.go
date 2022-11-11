@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	authService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
 	usersService "github.com/JECSand/go-grpc-server-boilerplate/protos/user"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"golang.org/x/crypto/bcrypt"
@@ -46,6 +47,24 @@ func (g *User) ToProto() *usersService.User {
 	}
 }
 
+// ToAuthProto Convert User to auth proto
+func (g *User) ToAuthProto() *authService.User {
+	return &authService.User{
+		Id:           g.Id,
+		Username:     g.Username,
+		FirstName:    g.FirstName,
+		LastName:     g.LastName,
+		Email:        g.Email,
+		Role:         g.Role,
+		RootAdmin:    g.RootAdmin,
+		GroupId:      g.GroupId,
+		ImageId:      g.ImageId,
+		LastModified: timestamppb.New(g.LastModified),
+		CreatedAt:    timestamppb.New(g.CreatedAt),
+		DeletedAt:    timestamppb.New(g.DeletedAt),
+	}
+}
+
 // LoadUserProto inputs a usersService.User and returns a User
 func LoadUserProto(u *usersService.User) *User {
 	return &User{
@@ -65,8 +84,8 @@ func LoadUserProto(u *usersService.User) *User {
 	}
 }
 
-// LoadUseCreateProto inputs a usersService.CreateReq and returns a User
-func LoadUseCreateProto(u *usersService.CreateReq) *User {
+// LoadUserCreateProto inputs a usersService.CreateReq and returns a User
+func LoadUserCreateProto(u *usersService.CreateReq) *User {
 	return &User{
 		Username:  u.GetUsername(),
 		Password:  u.GetPassword(),
