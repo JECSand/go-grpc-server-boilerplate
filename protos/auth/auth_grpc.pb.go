@@ -24,9 +24,9 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthServiceClient interface {
 	Register(ctx context.Context, in *RegisterReq, opts ...grpc.CallOption) (*RegisterRes, error)
 	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginRes, error)
-	Logout(ctx context.Context, in *LogoutReq, opts ...grpc.CallOption) (*LogoutRes, error)
-	Refresh(ctx context.Context, in *RefreshReq, opts ...grpc.CallOption) (*RefreshRes, error)
-	GenerateKey(ctx context.Context, in *GenerateKeyReq, opts ...grpc.CallOption) (*GenerateKeyRes, error)
+	Logout(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogoutRes, error)
+	Refresh(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RefreshRes, error)
+	GenerateKey(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GenerateKeyRes, error)
 	UpdatePassword(ctx context.Context, in *UpdatePasswordReq, opts ...grpc.CallOption) (*UpdatePasswordRes, error)
 }
 
@@ -56,7 +56,7 @@ func (c *authServiceClient) Login(ctx context.Context, in *LoginReq, opts ...grp
 	return out, nil
 }
 
-func (c *authServiceClient) Logout(ctx context.Context, in *LogoutReq, opts ...grpc.CallOption) (*LogoutRes, error) {
+func (c *authServiceClient) Logout(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogoutRes, error) {
 	out := new(LogoutRes)
 	err := c.cc.Invoke(ctx, "/authService.AuthService/Logout", in, out, opts...)
 	if err != nil {
@@ -65,7 +65,7 @@ func (c *authServiceClient) Logout(ctx context.Context, in *LogoutReq, opts ...g
 	return out, nil
 }
 
-func (c *authServiceClient) Refresh(ctx context.Context, in *RefreshReq, opts ...grpc.CallOption) (*RefreshRes, error) {
+func (c *authServiceClient) Refresh(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RefreshRes, error) {
 	out := new(RefreshRes)
 	err := c.cc.Invoke(ctx, "/authService.AuthService/Refresh", in, out, opts...)
 	if err != nil {
@@ -74,7 +74,7 @@ func (c *authServiceClient) Refresh(ctx context.Context, in *RefreshReq, opts ..
 	return out, nil
 }
 
-func (c *authServiceClient) GenerateKey(ctx context.Context, in *GenerateKeyReq, opts ...grpc.CallOption) (*GenerateKeyRes, error) {
+func (c *authServiceClient) GenerateKey(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GenerateKeyRes, error) {
 	out := new(GenerateKeyRes)
 	err := c.cc.Invoke(ctx, "/authService.AuthService/GenerateKey", in, out, opts...)
 	if err != nil {
@@ -98,9 +98,9 @@ func (c *authServiceClient) UpdatePassword(ctx context.Context, in *UpdatePasswo
 type AuthServiceServer interface {
 	Register(context.Context, *RegisterReq) (*RegisterRes, error)
 	Login(context.Context, *LoginReq) (*LoginRes, error)
-	Logout(context.Context, *LogoutReq) (*LogoutRes, error)
-	Refresh(context.Context, *RefreshReq) (*RefreshRes, error)
-	GenerateKey(context.Context, *GenerateKeyReq) (*GenerateKeyRes, error)
+	Logout(context.Context, *Empty) (*LogoutRes, error)
+	Refresh(context.Context, *Empty) (*RefreshRes, error)
+	GenerateKey(context.Context, *Empty) (*GenerateKeyRes, error)
 	UpdatePassword(context.Context, *UpdatePasswordReq) (*UpdatePasswordRes, error)
 }
 
@@ -114,13 +114,13 @@ func (UnimplementedAuthServiceServer) Register(context.Context, *RegisterReq) (*
 func (UnimplementedAuthServiceServer) Login(context.Context, *LoginReq) (*LoginRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedAuthServiceServer) Logout(context.Context, *LogoutReq) (*LogoutRes, error) {
+func (UnimplementedAuthServiceServer) Logout(context.Context, *Empty) (*LogoutRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
 }
-func (UnimplementedAuthServiceServer) Refresh(context.Context, *RefreshReq) (*RefreshRes, error) {
+func (UnimplementedAuthServiceServer) Refresh(context.Context, *Empty) (*RefreshRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Refresh not implemented")
 }
-func (UnimplementedAuthServiceServer) GenerateKey(context.Context, *GenerateKeyReq) (*GenerateKeyRes, error) {
+func (UnimplementedAuthServiceServer) GenerateKey(context.Context, *Empty) (*GenerateKeyRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateKey not implemented")
 }
 func (UnimplementedAuthServiceServer) UpdatePassword(context.Context, *UpdatePasswordReq) (*UpdatePasswordRes, error) {
@@ -175,7 +175,7 @@ func _AuthService_Login_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _AuthService_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LogoutReq)
+	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -187,13 +187,13 @@ func _AuthService_Logout_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/authService.AuthService/Logout",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).Logout(ctx, req.(*LogoutReq))
+		return srv.(AuthServiceServer).Logout(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthService_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RefreshReq)
+	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -205,13 +205,13 @@ func _AuthService_Refresh_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/authService.AuthService/Refresh",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).Refresh(ctx, req.(*RefreshReq))
+		return srv.(AuthServiceServer).Refresh(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthService_GenerateKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GenerateKeyReq)
+	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func _AuthService_GenerateKey_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/authService.AuthService/GenerateKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).GenerateKey(ctx, req.(*GenerateKeyReq))
+		return srv.(AuthServiceServer).GenerateKey(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	authService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
 	"github.com/dgrijalva/jwt-go"
 	"os"
 )
@@ -169,4 +170,37 @@ func VerifyRequestScope(authToken string, scopeType string) (*User, error) {
 		return nil, err
 	}
 	return tokenData.GetUsersScope(scopeType), nil
+}
+
+// LoadRegisterProto inputs an authService.RegisterReq and returns a User
+func LoadRegisterProto(u *authService.RegisterReq) *User {
+	return &User{
+		FirstName: u.GetFirstName(),
+		LastName:  u.GetLastName(),
+		Email:     u.GetEmail(),
+		Username:  u.GetUsername(),
+		Password:  u.GetPassword(),
+	}
+}
+
+// LoadLoginProto inputs an authService.LoginReq and returns a User
+func LoadLoginProto(u *authService.LoginReq) *User {
+	return &User{
+		Email:    u.GetEmail(),
+		Password: u.GetPassword(),
+	}
+}
+
+// PasswordUpdate stores the structured data from a session token for use
+type PasswordUpdate struct {
+	CurrentPassword string
+	NewPassword     string
+}
+
+// LoadPasswordUpdateProto inputs an authService.LoginReq and returns a PasswordUpdate
+func LoadPasswordUpdateProto(u *authService.UpdatePasswordReq) *PasswordUpdate {
+	return &PasswordUpdate{
+		CurrentPassword: u.GetCurrentPassword(),
+		NewPassword:     u.GetNewPassword(),
+	}
 }

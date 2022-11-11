@@ -1,7 +1,11 @@
 package utilities
 
 import (
+	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // JsonErr structures a standard error to return
@@ -43,4 +47,17 @@ func BoolToStr(in bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+// GetTokenFromContext parses an auth token from content metadata
+func GetTokenFromContext(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", status.Errorf(codes.Unauthenticated, "metadata is not provided")
+	}
+	values := md["authorization"]
+	if len(values) == 0 {
+		return "", status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+	}
+	return values[0], nil
 }
