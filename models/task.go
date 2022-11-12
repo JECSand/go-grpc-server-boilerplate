@@ -64,6 +64,30 @@ func LoadTaskProto(u *tasksService.Task) *Task {
 	}
 }
 
+// LoadTaskCreateProto inputs a tasksService.CreateReq and returns a Task
+func LoadTaskCreateProto(u *tasksService.CreateReq) *Task {
+	return &Task{
+		Name:        u.GetName(),
+		Due:         u.GetDue().AsTime(),
+		Description: u.GetDescription(),
+		UserId:      u.GetUserId(),
+		GroupId:     u.GetGroupId(),
+	}
+}
+
+// LoadTaskUpdateProto inputs a tasksService.UpdateReq and returns a Task
+func LoadTaskUpdateProto(u *tasksService.UpdateReq) *Task {
+	return &Task{
+		Id:          u.GetId(),
+		Name:        u.GetName(),
+		Status:      TaskStatus(u.GetStatus().Number()),
+		Due:         u.GetDue().AsTime(),
+		Description: u.GetDescription(),
+		UserId:      u.GetUserId(),
+		GroupId:     u.GetGroupId(),
+	}
+}
+
 // LoadScope scopes the Task struct
 func (g *Task) LoadScope(scopeUser *User) {
 	if !scopeUser.RootAdmin {

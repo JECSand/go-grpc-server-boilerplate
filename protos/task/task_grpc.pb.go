@@ -27,8 +27,6 @@ type TaskServiceClient interface {
 	Get(ctx context.Context, in *GetReq, opts ...grpc.CallOption) (*GetRes, error)
 	Find(ctx context.Context, in *FindReq, opts ...grpc.CallOption) (*FindRes, error)
 	Delete(ctx context.Context, in *DeleteReq, opts ...grpc.CallOption) (*DeleteRes, error)
-	AssignUser(ctx context.Context, in *AssignUserReq, opts ...grpc.CallOption) (*AssignUserRes, error)
-	ChangeStatus(ctx context.Context, in *ChangeStatusReq, opts ...grpc.CallOption) (*ChangeStatusRes, error)
 	GetUserTasks(ctx context.Context, in *GetUserTasksReq, opts ...grpc.CallOption) (*GetUserTasksRes, error)
 	GetGroupTasks(ctx context.Context, in *GetGroupTasksReq, opts ...grpc.CallOption) (*GetGroupTasksRes, error)
 }
@@ -86,24 +84,6 @@ func (c *taskServiceClient) Delete(ctx context.Context, in *DeleteReq, opts ...g
 	return out, nil
 }
 
-func (c *taskServiceClient) AssignUser(ctx context.Context, in *AssignUserReq, opts ...grpc.CallOption) (*AssignUserRes, error) {
-	out := new(AssignUserRes)
-	err := c.cc.Invoke(ctx, "/tasksService.TaskService/AssignUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *taskServiceClient) ChangeStatus(ctx context.Context, in *ChangeStatusReq, opts ...grpc.CallOption) (*ChangeStatusRes, error) {
-	out := new(ChangeStatusRes)
-	err := c.cc.Invoke(ctx, "/tasksService.TaskService/ChangeStatus", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *taskServiceClient) GetUserTasks(ctx context.Context, in *GetUserTasksReq, opts ...grpc.CallOption) (*GetUserTasksRes, error) {
 	out := new(GetUserTasksRes)
 	err := c.cc.Invoke(ctx, "/tasksService.TaskService/GetUserTasks", in, out, opts...)
@@ -131,8 +111,6 @@ type TaskServiceServer interface {
 	Get(context.Context, *GetReq) (*GetRes, error)
 	Find(context.Context, *FindReq) (*FindRes, error)
 	Delete(context.Context, *DeleteReq) (*DeleteRes, error)
-	AssignUser(context.Context, *AssignUserReq) (*AssignUserRes, error)
-	ChangeStatus(context.Context, *ChangeStatusReq) (*ChangeStatusRes, error)
 	GetUserTasks(context.Context, *GetUserTasksReq) (*GetUserTasksRes, error)
 	GetGroupTasks(context.Context, *GetGroupTasksReq) (*GetGroupTasksRes, error)
 }
@@ -155,12 +133,6 @@ func (UnimplementedTaskServiceServer) Find(context.Context, *FindReq) (*FindRes,
 }
 func (UnimplementedTaskServiceServer) Delete(context.Context, *DeleteReq) (*DeleteRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
-}
-func (UnimplementedTaskServiceServer) AssignUser(context.Context, *AssignUserReq) (*AssignUserRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AssignUser not implemented")
-}
-func (UnimplementedTaskServiceServer) ChangeStatus(context.Context, *ChangeStatusReq) (*ChangeStatusRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangeStatus not implemented")
 }
 func (UnimplementedTaskServiceServer) GetUserTasks(context.Context, *GetUserTasksReq) (*GetUserTasksRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserTasks not implemented")
@@ -270,42 +242,6 @@ func _TaskService_Delete_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TaskService_AssignUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssignUserReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TaskServiceServer).AssignUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tasksService.TaskService/AssignUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServiceServer).AssignUser(ctx, req.(*AssignUserReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TaskService_ChangeStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeStatusReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TaskServiceServer).ChangeStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tasksService.TaskService/ChangeStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServiceServer).ChangeStatus(ctx, req.(*ChangeStatusReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _TaskService_GetUserTasks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetUserTasksReq)
 	if err := dec(in); err != nil {
@@ -368,14 +304,6 @@ var TaskService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _TaskService_Delete_Handler,
-		},
-		{
-			MethodName: "AssignUser",
-			Handler:    _TaskService_AssignUser_Handler,
-		},
-		{
-			MethodName: "ChangeStatus",
-			Handler:    _TaskService_ChangeStatus_Handler,
 		},
 		{
 			MethodName: "GetUserTasks",
