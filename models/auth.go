@@ -1,9 +1,11 @@
 package models
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	authService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
+	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"github.com/dgrijalva/jwt-go"
 	"os"
 )
@@ -122,8 +124,12 @@ func DecodeJWT(curToken string) (*TokenData, error) {
 	return &tokenData, errors.New("invalid token")
 }
 
-// LoadTokenFromRequest inputs a http request and returns decrypted TokenData or an error
-func LoadTokenFromRequest(authToken string) (*TokenData, error) {
+// LoadTokenFromContext inputs a http request and returns decrypted TokenData or an error
+func LoadTokenFromContext(ctx context.Context) (*TokenData, error) {
+	authToken, err := utilities.GetTokenFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	tokenData, err := DecodeJWT(authToken)
 	if err != nil {
 		return nil, err
@@ -132,8 +138,8 @@ func LoadTokenFromRequest(authToken string) (*TokenData, error) {
 }
 
 // VerifyGroupRequestScope inputs a Group http request and returns decrypted TokenData or an error
-func VerifyGroupRequestScope(authToken string, groupId string) (string, error) {
-	tokenData, err := LoadTokenFromRequest(authToken)
+func VerifyGroupRequestScope(ctx context.Context, groupId string) (string, error) {
+	tokenData, err := LoadTokenFromContext(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -144,8 +150,8 @@ func VerifyGroupRequestScope(authToken string, groupId string) (string, error) {
 }
 
 // VerifyUserRequestScope inputs User http request and returns decrypted TokenData or an error
-func VerifyUserRequestScope(authToken string, userId string, scopeType string) (*User, error) {
-	tokenData, err := LoadTokenFromRequest(authToken)
+func VerifyUserRequestScope(ctx context.Context, userId string, scopeType string) (*User, error) {
+	tokenData, err := LoadTokenFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +170,8 @@ func VerifyUserRequestScope(authToken string, userId string, scopeType string) (
 }
 
 // VerifyRequestScope inputs generic http requests and returns decrypted TokenData or an error
-func VerifyRequestScope(authToken string, scopeType string) (*User, error) {
-	tokenData, err := LoadTokenFromRequest(authToken)
+func VerifyRequestScope(ctx context.Context, scopeType string) (*User, error) {
+	tokenData, err := LoadTokenFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}

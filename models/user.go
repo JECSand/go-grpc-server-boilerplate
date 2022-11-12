@@ -185,6 +185,13 @@ func (g *User) HashPassword() error {
 func (g *User) Validate(valCase string) (err error) {
 	var missingFields []string
 	switch valCase {
+	case "login":
+		if g.Email == "" {
+			missingFields = append(missingFields, "email")
+		}
+		if g.Password == "" {
+			missingFields = append(missingFields, "password")
+		}
 	case "auth":
 		if !g.CheckID("id") {
 			missingFields = append(missingFields, "id")

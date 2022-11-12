@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"github.com/JECSand/go-grpc-server-boilerplate/config"
 	authsService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
+	groupsService "github.com/JECSand/go-grpc-server-boilerplate/protos/group"
+	tasksService "github.com/JECSand/go-grpc-server-boilerplate/protos/task"
 	usersService "github.com/JECSand/go-grpc-server-boilerplate/protos/user"
 	"github.com/JECSand/go-grpc-server-boilerplate/services"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
@@ -23,15 +25,38 @@ import (
 )
 
 func accessibleRoles() map[string][]string {
+	const authServicePath = "/authService.AuthService/"
 	const userServicePath = "/usersService.UserService/"
+	const groupServicePath = "/groupsService.GroupService/"
+	const taskServicePath = "/tasksService.TaskService/"
 
 	return map[string][]string{
+
+		authServicePath + "Logout":         {"Member"},
+		authServicePath + "Refresh":        {"Member"},
+		authServicePath + "GenerateKey":    {"Member"},
+		authServicePath + "UpdatePassword": {"Member"},
+
 		userServicePath + "Create":        {"Admin"},
 		userServicePath + "Update":        {"Admin"},
 		userServicePath + "Get":           {"Member"},
 		userServicePath + "GetGroupUsers": {"Member"},
 		userServicePath + "Find":          {"Member"},
 		userServicePath + "Delete":        {"Admin"},
+
+		groupServicePath + "Create": {"Root"},
+		groupServicePath + "Update": {"Admin"},
+		groupServicePath + "Get":    {"Member"},
+		groupServicePath + "Find":   {"Member"},
+		groupServicePath + "Delete": {"Root"},
+
+		taskServicePath + "Create":        {"Member"},
+		taskServicePath + "Update":        {"Member"},
+		taskServicePath + "Get":           {"Member"},
+		taskServicePath + "GetGroupTasks": {"Member"},
+		taskServicePath + "GetUserTasks":  {"Member"},
+		taskServicePath + "Find":          {"Member"},
+		taskServicePath + "Delete":        {"Member"},
 	}
 }
 
@@ -94,6 +119,10 @@ func (s *Server) Start() error {
 	)
 	userService := services.NewUserService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
 	usersService.RegisterUserServiceServer(grpcServer, userService)
+	groupService := services.NewGroupService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
+	groupsService.RegisterGroupServiceServer(grpcServer, groupService)
+	taskService := services.NewTaskService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
+	tasksService.RegisterTaskServiceServer(grpcServer, taskService)
 	authService := services.NewAuthService(s.log, s.TokenService, s.UserDataService, s.GroupDataService)
 	authsService.RegisterAuthServiceServer(grpcServer, authService)
 	go func() {

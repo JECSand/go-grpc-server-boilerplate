@@ -32,23 +32,23 @@ func NewUserService(log utilities.Logger, ts *TokenService, u UserDataService, g
 
 // Create is a New User
 func (u *UserService) Create(ctx context.Context, req *usersService.CreateReq) (*usersService.CreateRes, error) {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Create")
-	//defer span.Finish()
 	user := models.LoadUserCreateProto(req)
-	// TODO NEXT FIX
-	/*
-		decodedToken, err := auth.DecodeJWT(r.Header.Get("Auth-Token"))
-		if err != nil {
-			utilities.RespondWithError(w, http.StatusUnauthorized, utilities.JWTError{Message: err.Error()})
-			return
-		}
-		userScope := decodedToken.GetUsersScope("create")
-		user.LoadScope(userScope, "create")
-		if user.GroupId == "" {
-			user.GroupId = decodedToken.GroupId
-		}
-	*/
-	user, err := u.userDB.UserCreate(user)
+	accessToken, err := utilities.GetTokenFromContext(ctx)
+	if err != nil {
+		u.log.Errorf("utilities.GetTokenFromContext: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	decodedToken, err := models.DecodeJWT(accessToken)
+	if err != nil {
+		u.log.Errorf("utilities.GetTokenFromContext: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	userScope := decodedToken.GetUsersScope("create")
+	user.LoadScope(userScope, "create")
+	if user.GroupId == "" {
+		user.GroupId = decodedToken.GroupId
+	}
+	user, err = u.userDB.UserCreate(user)
 	if err != nil {
 		u.log.Errorf("userDB.UserCreate: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
@@ -59,24 +59,19 @@ func (u *UserService) Create(ctx context.Context, req *usersService.CreateReq) (
 
 // Update a User
 func (u *UserService) Update(ctx context.Context, req *usersService.UpdateReq) (*usersService.UpdateRes, error) {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Update")
-	//defer span.Finish()
 	if !utilities.CheckObjectID(req.GetId()) {
 		err := errors.New(req.GetId() + " is an invalid userId")
 		u.log.Errorf("utilities.CheckObjectID: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	user := models.LoadUserUpdateProto(req)
-	// TODO NEXT FIX
-	/*
-		userScope, err := auth.VerifyUserRequestScope(r, user.Id, "update")
-		if err != nil {
-			u.log.Errorf("auth.VerifyUserRequestScope: %v", err)
-			return nil, utilities.ErrorResponse(err, err.Error())
-		}
-		user.LoadScope(userScope, "update")
-	*/
-	user, err := u.userDB.UserUpdate(user)
+	userScope, err := models.VerifyUserRequestScope(ctx, user.Id, "update")
+	if err != nil {
+		u.log.Errorf("models.VerifyUserRequestScope: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	user.LoadScope(userScope, "update")
+	user, err = u.userDB.UserUpdate(user)
 	if err != nil {
 		u.log.Errorf("userDB.UserUpdate: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
@@ -86,23 +81,18 @@ func (u *UserService) Update(ctx context.Context, req *usersService.UpdateReq) (
 
 // Get a specific User
 func (u *UserService) Get(ctx context.Context, req *usersService.GetReq) (*usersService.GetRes, error) {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Get")
-	//defer span.Finish()
 	if !utilities.CheckObjectID(req.GetId()) {
 		err := errors.New(req.GetId() + " is an invalid userId")
 		u.log.Errorf("utilities.CheckObjectID: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	filter := models.User{Id: req.GetId()}
-	// TODO NEXT FIX
-	/*
-		userScope, err := auth.VerifyUserRequestScope(r, userId, "find")
-		if err != nil {
-			utilities.RespondWithError(w, http.StatusUnauthorized, utilities.JWTError{Message: err.Error()})
-			return
-		}
-		filter.LoadScope(userScope, "find")
-	*/
+	userScope, err := models.VerifyUserRequestScope(ctx, req.GetId(), "find")
+	if err != nil {
+		u.log.Errorf("models.VerifyUserRequestScope: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	filter.LoadScope(userScope, "find")
 	user, err := u.userDB.UserFind(&filter)
 	if err != nil {
 		u.log.Errorf("userDB.UserFind: %v", err)
@@ -114,18 +104,7 @@ func (u *UserService) Get(ctx context.Context, req *usersService.GetReq) (*users
 
 // Find Users from an input query
 func (u *UserService) Find(ctx context.Context, req *usersService.FindReq) (*usersService.FindRes, error) {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Find")
-	//defer span.Finish()
 	// TODO NEXT FIX - valid req.GetQuery() authenticity / scope
-	/*
-		decodedToken, err := auth.DecodeJWT(r.Header.Get("Auth-Token"))
-		if err != nil {
-			utilities.RespondWithError(w, http.StatusUnauthorized, utilities.JWTError{Message: err.Error()})
-			return
-		}
-		userScope := decodedToken.GetUsersScope("find")
-		filter.LoadScope(userScope, "find")
-	*/
 	users, err := u.userDB.UsersQuery(ctx, req.GetQuery(), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("userDB.UsersQuery: %v", err)
@@ -143,20 +122,17 @@ func (u *UserService) Find(ctx context.Context, req *usersService.FindReq) (*use
 
 // GetGroupUsers returns the users for a given groupId
 func (u *UserService) GetGroupUsers(ctx context.Context, req *usersService.GetGroupUsersReq) (*usersService.GetGroupUsersRes, error) {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Find")
-	//defer span.Finish()
-	// TODO NEXT FIX - valid req.GetQuery() authenticity / scope
-	//		CHECK GroupID
-	/*
-		decodedToken, err := auth.DecodeJWT(r.Header.Get("Auth-Token"))
-		if err != nil {
-			utilities.RespondWithError(w, http.StatusUnauthorized, utilities.JWTError{Message: err.Error()})
-			return
-		}
-		userScope := decodedToken.GetUsersScope("find")
-		filter.LoadScope(userScope, "find")
-	*/
-	users, err := u.userDB.UsersQuery(ctx, req.GetGroupId(), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	if !utilities.CheckObjectID(req.GetGroupId()) {
+		err := errors.New("invalid group id")
+		u.log.Errorf("utilities.CheckObjectID: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	groupId, err := models.VerifyGroupRequestScope(ctx, req.GetGroupId())
+	if err != nil {
+		u.log.Errorf("models.VerifyGroupRequestScope: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	users, err := u.userDB.UsersQuery(ctx, groupId, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("userDB.UsersQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
@@ -173,23 +149,18 @@ func (u *UserService) GetGroupUsers(ctx context.Context, req *usersService.GetGr
 
 // Delete is the handler function that deletes a user
 func (u *UserService) Delete(ctx context.Context, req *usersService.DeleteReq) (*usersService.DeleteRes, error) {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "userService.Find")
-	//defer span.Finish()
 	if !utilities.CheckObjectID(req.GetId()) {
 		err := errors.New(req.GetId() + " is an invalid userId")
 		u.log.Errorf("utilities.CheckObjectID: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	filter := models.User{Id: req.GetId()}
-	// TODO NEXT FIX
-	/*
-		userScope, err := auth.VerifyUserRequestScope(r, userId, "update")
-		if err != nil {
-			utilities.RespondWithError(w, http.StatusUnauthorized, utilities.JWTError{Message: err.Error()})
-			return
-		}
-		filter.LoadScope(userScope, "find")
-	*/
+	userScope, err := models.VerifyUserRequestScope(ctx, req.GetId(), "find")
+	if err != nil {
+		u.log.Errorf("models.VerifyUserRequestScope: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
+	filter.LoadScope(userScope, "find")
 	user, err := u.userDB.UserFind(&filter)
 	if err != nil {
 		u.log.Errorf("userDB.UserFind: %v", err)
@@ -207,6 +178,40 @@ func (u *UserService) Delete(ctx context.Context, req *usersService.DeleteReq) (
 	}
 	user.Password = ""
 	return &usersService.DeleteRes{User: user.ToProto()}, nil
+}
+
+// deleteUserAssets asynchronously gets a group and its users from the database
+func (u *UserService) deleteUserAssets(user *models.User) error {
+	if !user.CheckID("id") {
+		return errors.New("filter id cannot be empty for mass delete")
+	}
+	gErrCh := make(chan error)
+	uErrCh := make(chan error)
+	go func() {
+		if user.CheckID("image_id") {
+			_, err := u.fileDB.FileDelete(&models.File{OwnerId: user.Id, OwnerType: "user"})
+			gErrCh <- err
+		} else {
+			gErrCh <- nil
+		}
+	}()
+	go func() {
+		_, err := u.taskDB.TaskDeleteMany(&models.Task{UserId: user.Id})
+		uErrCh <- err
+	}()
+	for i := 0; i < 2; i++ {
+		select {
+		case gErr := <-gErrCh:
+			if gErr != nil {
+				return gErr
+			}
+		case uErr := <-uErrCh:
+			if uErr != nil {
+				return uErr
+			}
+		}
+	}
+	return nil
 }
 
 /*
@@ -281,37 +286,3 @@ func (u *UserService) UploadImage(stream *usersService.UploadImageReq) error {
 		return
 }
 */
-
-// deleteUserAssets asynchronously gets a group and its users from the database
-func (u *UserService) deleteUserAssets(user *models.User) error {
-	if !user.CheckID("id") {
-		return errors.New("filter id cannot be empty for mass delete")
-	}
-	gErrCh := make(chan error)
-	uErrCh := make(chan error)
-	go func() {
-		if user.CheckID("image_id") {
-			_, err := u.fileDB.FileDelete(&models.File{OwnerId: user.Id, OwnerType: "user"})
-			gErrCh <- err
-		} else {
-			gErrCh <- nil
-		}
-	}()
-	go func() {
-		_, err := u.taskDB.TaskDeleteMany(&models.Task{UserId: user.Id})
-		uErrCh <- err
-	}()
-	for i := 0; i < 2; i++ {
-		select {
-		case gErr := <-gErrCh:
-			if gErr != nil {
-				return gErr
-			}
-		case uErr := <-uErrCh:
-			if uErr != nil {
-				return uErr
-			}
-		}
-	}
-	return nil
-}

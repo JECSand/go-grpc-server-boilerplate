@@ -136,8 +136,6 @@ service TaskService {
   rpc Get(GetReq) returns (GetRes) {}
   rpc Find(FindReq) returns (FindRes) {}
   rpc Delete(DeleteReq) returns (DeleteRes) {}
-  rpc AssignUser(AssignUserReq) returns (AssignUserRes) {}
-  rpc ChangeStatus(ChangeStatusReq) returns (ChangeStatusRes) {}
   rpc GetUserTasks(GetUserTasksReq) returns (GetUserTasksRes) {}
   rpc GetGroupTasks(GetGroupTasksReq) returns (GetGroupTasksRes) {}
 }

@@ -18,7 +18,7 @@ message Empty {}
 
 message CreateReq {
   string Name = 1;
-  string RootAdmin = 2;
+  bool RootAdmin = 2;
 }
 
 message CreateRes {
@@ -27,14 +27,7 @@ message CreateRes {
 
 message UpdateReq {
   string Id = 1;
-  string Username = 2;
-  string Password = 3;
-  string FirstName = 4;
-  string LastName = 5;
-  string Email = 6;
-  string Role = 7;
-  bool RootAdmin = 8;
-  string GroupId = 9;
+  string Name = 2;
 }
 
 message UpdateRes {

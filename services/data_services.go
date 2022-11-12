@@ -30,6 +30,7 @@ type GroupDataService interface {
 	GroupDeleteMany(g *models.Group) (*models.Group, error)
 	GroupUpdate(g *models.Group) (*models.Group, error)
 	GroupDocInsert(g *models.Group) (*models.Group, error)
+	GroupsQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.GroupsRes, error)
 }
 
 // TaskDataService is an interface to database.TaskService
@@ -41,6 +42,7 @@ type TaskDataService interface {
 	TaskDeleteMany(g *models.Task) (*models.Task, error)
 	TaskUpdate(g *models.Task) (*models.Task, error)
 	TaskDocInsert(g *models.Task) (*models.Task, error)
+	TasksQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.TasksRes, error)
 }
 
 // FileDataService is an interface to database.FileService

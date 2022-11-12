@@ -43,6 +43,22 @@ func LoadGroupProto(u *groupsService.Group) *Group {
 	}
 }
 
+// LoadGroupCreateProto inputs a groupsService.CreateReq and returns a Group
+func LoadGroupCreateProto(u *groupsService.CreateReq) *Group {
+	return &Group{
+		Name:      u.GetName(),
+		RootAdmin: u.GetRootAdmin(),
+	}
+}
+
+// LoadGroupUpdateProto inputs a groupsService.UpdateReq and returns a Group
+func LoadGroupUpdateProto(u *groupsService.UpdateReq) *Group {
+	return &Group{
+		Id:   u.GetId(),
+		Name: u.GetName(),
+	}
+}
+
 // CheckID determines whether a specified ID is set or not
 func (g *Group) CheckID(chkId string) bool {
 	switch chkId {
@@ -92,4 +108,16 @@ func (p *GroupsRes) ToProto() []*groupsService.Group {
 		uList = append(uList, u.ToProto())
 	}
 	return uList
+}
+
+// GroupUsers is used for storing a Group record with it's associated Users
+type GroupUsers struct {
+	Group *Group
+	Users []*User
+}
+
+// GroupTasks is used for storing a Group record with it's associated Tasks
+type GroupTasks struct {
+	Group *Group
+	Tasks []*Task
 }

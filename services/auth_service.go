@@ -63,15 +63,9 @@ func (u *AuthService) Register(ctx context.Context, req *authService.RegisterReq
 
 // Login is the handler function that manages the user SignIn process
 func (u *AuthService) Login(ctx context.Context, req *authService.LoginReq) (*authService.LoginRes, error) {
-	var err error
 	user := models.LoadLoginProto(req)
-	if user.Email == "" {
-		err = errors.New("missing user email")
-		u.log.Errorf("AuthService.Login: %v", err)
-		return nil, utilities.ErrorResponse(err, err.Error())
-	}
-	if user.Password == "" {
-		err = errors.New("missing user password")
+	err := user.Validate("login")
+	if err != nil {
 		u.log.Errorf("AuthService.Login: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
@@ -106,14 +100,9 @@ func (u *AuthService) Logout(ctx context.Context, req *authService.Empty) (*auth
 
 // Refresh is the handler function that refreshes a users JWT token
 func (u *AuthService) Refresh(ctx context.Context, req *authService.Empty) (*authService.RefreshRes, error) {
-	accessToken, err := utilities.GetTokenFromContext(ctx)
+	tokenClaims, err := models.LoadTokenFromContext(ctx)
 	if err != nil {
-		u.log.Errorf("utilities.GetTokenFromContext: %v", err)
-		return nil, utilities.ErrorResponse(err, err.Error())
-	}
-	tokenClaims, err := models.DecodeJWT(accessToken)
-	if err != nil {
-		u.log.Errorf("models.DecodeJWT: %v", err)
+		u.log.Errorf("models.LoadTokenFromContext: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	user, err := u.userDB.UserFind(tokenClaims.ToUser())
@@ -131,14 +120,9 @@ func (u *AuthService) Refresh(ctx context.Context, req *authService.Empty) (*aut
 
 // GenerateKey is the handler function that generates 6 month API Key for a given user
 func (u *AuthService) GenerateKey(ctx context.Context, req *authService.Empty) (*authService.GenerateKeyRes, error) {
-	accessToken, err := utilities.GetTokenFromContext(ctx)
+	tokenClaims, err := models.LoadTokenFromContext(ctx)
 	if err != nil {
-		u.log.Errorf("utilities.GetTokenFromContext: %v", err)
-		return nil, utilities.ErrorResponse(err, err.Error())
-	}
-	tokenClaims, err := models.DecodeJWT(accessToken)
-	if err != nil {
-		u.log.Errorf("models.DecodeJWT: %v", err)
+		u.log.Errorf("models.LoadTokenFromContext: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	user, err := u.userDB.UserFind(tokenClaims.ToUser())
@@ -156,14 +140,9 @@ func (u *AuthService) GenerateKey(ctx context.Context, req *authService.Empty) (
 
 // UpdatePassword is the handler function that manages the user password update process
 func (u *AuthService) UpdatePassword(ctx context.Context, req *authService.UpdatePasswordReq) (*authService.UpdatePasswordRes, error) {
-	accessToken, err := utilities.GetTokenFromContext(ctx)
+	tokenClaims, err := models.LoadTokenFromContext(ctx)
 	if err != nil {
-		u.log.Errorf("utilities.GetTokenFromContext: %v", err)
-		return nil, utilities.ErrorResponse(err, err.Error())
-	}
-	tokenClaims, err := models.DecodeJWT(accessToken)
-	if err != nil {
-		u.log.Errorf("models.DecodeJWT: %v", err)
+		u.log.Errorf("models.LoadTokenFromContext: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	pw := models.LoadPasswordUpdateProto(req)

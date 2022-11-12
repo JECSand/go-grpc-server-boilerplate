@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
+	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -140,4 +144,59 @@ func (p *GroupService) GroupDocInsert(g *models.Group) (*models.Group, error) {
 		return nil, err
 	}
 	return insertGroup.toRoot(), nil
+}
+
+// GroupsQuery is used for a paginated groups search
+func (p *GroupService) GroupsQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.GroupsRes, error) {
+	f := bson.D{
+		{Key: "$or", Value: bson.A{
+			bson.D{{Key: "name", Value: primitive.Regex{
+				Pattern: query,
+				Options: "gi",
+			}}},
+		}},
+	}
+	count, err := p.collection.CountDocuments(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	if count == 0 {
+		return &models.GroupsRes{
+			TotalCount: 0,
+			TotalPages: 0,
+			Page:       0,
+			Size:       0,
+			HasMore:    false,
+			Groups:     make([]*models.Group, 0),
+		}, nil
+	}
+	limit := int64(pagination.GetLimit())
+	skip := int64(pagination.GetOffset())
+	cursor, err := p.collection.Find(ctx, f, &options.FindOptions{
+		Limit: &limit,
+		Skip:  &skip,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	groups := make([]*models.Group, 0, pagination.GetSize())
+	for cursor.Next(ctx) {
+		var u groupModel
+		if err = cursor.Decode(&u); err != nil {
+			return nil, err
+		}
+		groups = append(groups, u.toRoot())
+	}
+	if err = cursor.Err(); err != nil {
+		return nil, err
+	}
+	return &models.GroupsRes{
+		TotalCount: count,
+		TotalPages: int64(pagination.GetTotalPages(int(count))),
+		Page:       int64(pagination.GetPage()),
+		Size:       int64(pagination.GetSize()),
+		HasMore:    pagination.GetHasMore(int(count)),
+		Groups:     groups,
+	}, nil
 }
