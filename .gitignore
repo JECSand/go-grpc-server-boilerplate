@@ -15,7 +15,6 @@
 # vendor/
 conf.json
 go-grpc-server-boilerplate
-.idea/*
 /mongodb_data_container
 data
 keyfile
