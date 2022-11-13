@@ -51,7 +51,7 @@ type Configuration struct {
 func GetConfigurations() (*Configuration, error) {
 	confFile := "conf.json"
 	if os.Getenv("ENV") == "test" {
-		confFile = "test_conf.json"
+		confFile = "../config/test_conf.json"
 	}
 	file, err := os.Open(confFile)
 	if err != nil {
