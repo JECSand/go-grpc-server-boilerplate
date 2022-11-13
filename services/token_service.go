@@ -48,11 +48,11 @@ func (a *TokenService) tokenVerifyMiddleWare(roleType string, authToken string) 
 	verified, verifyMsg := a.verifyTokenUser(decodedToken)
 	if verified {
 		if roleType == "Root" && decodedToken.RootAdmin {
-			return false, nil
+			return true, nil
 		} else if roleType == "Admin" && decodedToken.Role == "admin" {
-			return false, nil
+			return true, nil
 		} else if roleType == "Member" {
-			return false, nil
+			return true, nil
 		} else {
 			return false, errors.New("invalid token")
 		}
