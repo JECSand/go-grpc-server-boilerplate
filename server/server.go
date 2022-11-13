@@ -144,6 +144,7 @@ func (s *Server) Start() error {
 func (s *Server) StartTest(ctx context.Context) (*grpc.ClientConn, func()) {
 	buffer := 101024 * 1024
 	l := bufconn.Listen(buffer)
+	li := NewLoggerInterceptor(s.log, s.cfg)
 	ai := NewAuthInterceptor(s.log, s.TokenService, accessibleRoles())
 	grpcServer := grpc.NewServer(
 		grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -157,6 +158,7 @@ func (s *Server) StartTest(ctx context.Context) (*grpc.ClientConn, func()) {
 			grpc_opentracing.UnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(),
 			ai.Unary(),
+			li.Logger,
 		),
 		grpc.StreamInterceptor(ai.Stream()),
 	)
