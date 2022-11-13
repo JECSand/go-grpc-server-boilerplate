@@ -21,7 +21,7 @@ services:
       ROOT_EMAIL: "master@example.com"
       ROOT_GROUP: "MasterAdmins"
       REGISTRATION: "ON"
-      PORT: "8081"
+      PORT: ":5555"
       HTTPS: "OFF"
       CERT: ""
       KEY: ""
