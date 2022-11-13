@@ -6,6 +6,18 @@ import (
 	"time"
 )
 
+// createTestToken create a JWT Token for use by the integration tests
+func createTestToken(ta App, user *models.User) (string, error) {
+	if !user.CheckID("id") { // generate bad JWT token
+		return "111111111111111111111111111", nil
+	}
+	newToken, err := ta.server.TokenService.GenerateToken(user, "session")
+	if err != nil {
+		return "", err
+	}
+	return newToken, nil
+}
+
 // CreateTestGroup creates a group doc for test setup
 func createTestGroup(ta App, groupType int) *models.Group {
 	group := models.Group{}

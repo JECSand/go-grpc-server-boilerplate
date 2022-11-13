@@ -16,7 +16,10 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/test/bufconn"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -29,34 +32,29 @@ func accessibleRoles() map[string][]string {
 	const userServicePath = "/usersService.UserService/"
 	const groupServicePath = "/groupsService.GroupService/"
 	const taskServicePath = "/tasksService.TaskService/"
-
 	return map[string][]string{
-
 		authServicePath + "Logout":         {"Member"},
 		authServicePath + "Refresh":        {"Member"},
 		authServicePath + "GenerateKey":    {"Member"},
 		authServicePath + "UpdatePassword": {"Member"},
-
-		userServicePath + "Create":        {"Admin"},
-		userServicePath + "Update":        {"Admin"},
-		userServicePath + "Get":           {"Member"},
-		userServicePath + "GetGroupUsers": {"Member"},
-		userServicePath + "Find":          {"Member"},
-		userServicePath + "Delete":        {"Admin"},
-
-		groupServicePath + "Create": {"Root"},
-		groupServicePath + "Update": {"Admin"},
-		groupServicePath + "Get":    {"Member"},
-		groupServicePath + "Find":   {"Member"},
-		groupServicePath + "Delete": {"Root"},
-
-		taskServicePath + "Create":        {"Member"},
-		taskServicePath + "Update":        {"Member"},
-		taskServicePath + "Get":           {"Member"},
-		taskServicePath + "GetGroupTasks": {"Member"},
-		taskServicePath + "GetUserTasks":  {"Member"},
-		taskServicePath + "Find":          {"Member"},
-		taskServicePath + "Delete":        {"Member"},
+		userServicePath + "Create":         {"Admin"},
+		userServicePath + "Update":         {"Admin"},
+		userServicePath + "Get":            {"Member"},
+		userServicePath + "GetGroupUsers":  {"Member"},
+		userServicePath + "Find":           {"Member"},
+		userServicePath + "Delete":         {"Admin"},
+		groupServicePath + "Create":        {"Root"},
+		groupServicePath + "Update":        {"Admin"},
+		groupServicePath + "Get":           {"Member"},
+		groupServicePath + "Find":          {"Member"},
+		groupServicePath + "Delete":        {"Root"},
+		taskServicePath + "Create":         {"Member"},
+		taskServicePath + "Update":         {"Member"},
+		taskServicePath + "Get":            {"Member"},
+		taskServicePath + "GetGroupTasks":  {"Member"},
+		taskServicePath + "GetUserTasks":   {"Member"},
+		taskServicePath + "Find":           {"Member"},
+		taskServicePath + "Delete":         {"Member"},
 	}
 }
 
@@ -140,4 +138,53 @@ func (s *Server) Start() error {
 	grpcServer.GracefulStop()
 	s.log.Info("Server Exited Properly")
 	return nil
+}
+
+// StartTest starts the initialized Server in a test state
+func (s *Server) StartTest(ctx context.Context) (*grpc.ClientConn, func()) {
+	buffer := 101024 * 1024
+	l := bufconn.Listen(buffer)
+	ai := NewAuthInterceptor(s.log, s.TokenService, accessibleRoles())
+	grpcServer := grpc.NewServer(
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: s.cfg.Server.MaxConnectionIdle * time.Minute,
+			Timeout:           s.cfg.Server.Timeout * time.Second,
+			MaxConnectionAge:  s.cfg.Server.MaxConnectionAge * time.Minute,
+			Time:              s.cfg.Server.Timeout * time.Minute,
+		}),
+		grpc.ChainUnaryInterceptor(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_opentracing.UnaryServerInterceptor(),
+			grpcrecovery.UnaryServerInterceptor(),
+			ai.Unary(),
+		),
+		grpc.StreamInterceptor(ai.Stream()),
+	)
+	userService := services.NewUserService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
+	usersService.RegisterUserServiceServer(grpcServer, userService)
+	groupService := services.NewGroupService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
+	groupsService.RegisterGroupServiceServer(grpcServer, groupService)
+	taskService := services.NewTaskService(s.log, s.TokenService, s.UserDataService, s.GroupDataService, s.TaskDataService, s.FileDataService)
+	tasksService.RegisterTaskServiceServer(grpcServer, taskService)
+	authService := services.NewAuthService(s.log, s.TokenService, s.UserDataService, s.GroupDataService)
+	authsService.RegisterAuthServiceServer(grpcServer, authService)
+	go func() {
+		s.log.Infof("GRPC Test Server is starting...")
+		s.log.Fatal(grpcServer.Serve(l))
+	}()
+	conn, err := grpc.DialContext(ctx, "",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return l.Dial()
+		}), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Printf("error connecting to server: %v", err)
+	}
+	closer := func() {
+		err := l.Close()
+		if err != nil {
+			log.Printf("error closing listener: %v", err)
+		}
+		grpcServer.Stop()
+	}
+	return conn, closer
 }
