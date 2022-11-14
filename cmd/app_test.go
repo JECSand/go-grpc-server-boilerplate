@@ -82,3 +82,15 @@ func Test_AuthLogin(t *testing.T) {
 		})
 	}
 }
+
+/*
+USER TESTS
+*/
+
+/*
+GROUP TESTS
+*/
+
+/*
+TASK TESTS
+*/

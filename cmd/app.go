@@ -30,6 +30,11 @@ func (a *App) Initialize() error {
 			return err
 		}
 		conf.InitializeEnvironmentalVars()
+	} else {
+		conf, err = config.GetDevConfigurations()
+		if err != nil {
+			return err
+		}
 	}
 	appLogger := utilities.NewAPILogger(conf)
 	appLogger.InitLogger()

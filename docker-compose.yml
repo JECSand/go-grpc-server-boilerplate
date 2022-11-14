@@ -22,9 +22,8 @@ services:
       ROOT_GROUP: "MasterAdmins"
       REGISTRATION: "ON"
       PORT: ":5555"
-      HTTPS: "OFF"
-      CERT: ""
-      KEY: ""
+      CERT: "ssl/server.crt"
+      KEY: "ssl/server.pem"
       ENV: docker-dev
 
   mongodb-container:
