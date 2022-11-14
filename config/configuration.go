@@ -66,6 +66,43 @@ func GetConfigurations() (*Configuration, error) {
 	return &configurationSettings, nil
 }
 
+// GetDevConfigurations returns a Configuration struct for running in Docker
+func GetDevConfigurations() (*Configuration, error) {
+	serverConfigs := ServerConfig{
+		Port:              ":5555",
+		Registration:      "ON",
+		SSL:               "false",
+		Timeout:           15,
+		ReadTimeout:       5,
+		WriteTimeout:      5,
+		MaxConnectionIdle: 5,
+		MaxConnectionAge:  5,
+	}
+	mongoDBConfigs := MongoDBConfig{
+		URI: os.Getenv("MONGO_URI"),
+		DB:  "testDB",
+	}
+	loggerConfigs := LoggerConfig{
+		DisableCaller:     false,
+		DisableStacktrace: false,
+		Encoding:          "json",
+		Level:             "info",
+	}
+	return &Configuration{
+		Server:       serverConfigs,
+		MongoDB:      mongoDBConfigs,
+		Logger:       loggerConfigs,
+		TokenSecret:  os.Getenv("TOKEN_SECRET"),
+		RootAdmin:    os.Getenv("ROOT_ADMIN"),
+		RootPassword: os.Getenv("ROOT_PASSWORD"),
+		RootEmail:    os.Getenv("ROOT_EMAIL"),
+		RootGroup:    os.Getenv("ROOT_GROUP"),
+		Cert:         os.Getenv("CERT"),
+		Key:          os.Getenv("KEY"),
+		ENV:          os.Getenv("ENV"),
+	}, nil
+}
+
 // InitializeEnvironmentalVars initializes the environmental variables for the application
 func (c *Configuration) InitializeEnvironmentalVars() {
 	os.Setenv("MONGO_URI", c.MongoDB.URI)

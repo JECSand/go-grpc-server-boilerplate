@@ -15,6 +15,7 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /app
 # Retrieve the binary from the previous stage
+COPY . .
 COPY --from=builder /src/main .
 # Expose port
 EXPOSE 5555
