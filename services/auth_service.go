@@ -35,18 +35,23 @@ func (u *AuthService) Register(ctx context.Context, req *authService.RegisterReq
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	user := models.LoadRegisterProto(req)
+	err := user.Validate("register")
+	if err != nil {
+		u.log.Errorf("user.Validate: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
 	group := &models.Group{
 		Id:        utilities.GenerateObjectID(),
 		Name:      user.Email + "_group",
 		RootAdmin: false,
 	}
-	g, err := u.groupDB.GroupCreate(group)
+	group, err = u.groupDB.GroupCreate(group)
 	if err != nil {
 		u.log.Errorf("groupDB.GroupCreate: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	user.Role = "admin"
-	user.GroupId = g.Id
+	user.GroupId = group.Id
 	user, err = u.userDB.UserCreate(user)
 	if err != nil {
 		u.log.Errorf("userDB.UserCreate: %v", err)
@@ -146,6 +151,11 @@ func (u *AuthService) UpdatePassword(ctx context.Context, req *authService.Updat
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
 	pw := models.LoadPasswordUpdateProto(req)
+	err = pw.Validate()
+	if err != nil {
+		u.log.Errorf("PasswordUpdate.Validate: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
 	user := tokenClaims.ToUser()
 	_, err = u.userDB.UpdatePassword(user, pw.CurrentPassword, pw.NewPassword)
 	if err != nil {

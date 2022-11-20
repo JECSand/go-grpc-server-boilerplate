@@ -172,7 +172,9 @@ func (s *Server) StartTest(ctx context.Context) (*grpc.ClientConn, func()) {
 	authsService.RegisterAuthServiceServer(grpcServer, authService)
 	go func() {
 		s.log.Infof("GRPC Test Server is starting...")
-		s.log.Fatal(grpcServer.Serve(l))
+		if err := grpcServer.Serve(l); err != nil {
+			s.log.Fatal("error serving GRPC Test Server: %v", err)
+		}
 	}()
 	conn, err := grpc.DialContext(ctx, "",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
@@ -182,7 +184,7 @@ func (s *Server) StartTest(ctx context.Context) (*grpc.ClientConn, func()) {
 		log.Printf("error connecting to server: %v", err)
 	}
 	closer := func() {
-		err := l.Close()
+		err = l.Close()
 		if err != nil {
 			log.Printf("error closing listener: %v", err)
 		}
