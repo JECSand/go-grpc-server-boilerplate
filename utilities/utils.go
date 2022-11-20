@@ -61,3 +61,8 @@ func GetTokenFromContext(ctx context.Context) (string, error) {
 	}
 	return values[0], nil
 }
+
+// AttachTokenToContext inputs ctx and an auth token and returns ctx with token attached
+func AttachTokenToContext(ctx context.Context, authToken string) context.Context {
+	return metadata.AppendToOutgoingContext(ctx, "authorization", authToken)
+}

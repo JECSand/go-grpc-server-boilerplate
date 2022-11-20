@@ -192,6 +192,16 @@ func (g *User) Validate(valCase string) (err error) {
 		if g.Password == "" {
 			missingFields = append(missingFields, "password")
 		}
+	case "register":
+		if g.Email == "" {
+			missingFields = append(missingFields, "email")
+		}
+		if g.Username == "" {
+			missingFields = append(missingFields, "username")
+		}
+		if g.Password == "" {
+			missingFields = append(missingFields, "password")
+		}
 	case "auth":
 		if !g.CheckID("id") {
 			missingFields = append(missingFields, "id")

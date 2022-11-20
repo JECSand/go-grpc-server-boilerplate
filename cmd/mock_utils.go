@@ -7,7 +7,7 @@ import (
 )
 
 // createTestToken create a JWT Token for use by the integration tests
-func createTestToken(ta App, user *models.User) (string, error) {
+func createTestToken(ta *App, user *models.User) (string, error) {
 	if !user.CheckID("id") { // generate bad JWT token
 		return "111111111111111111111111111", nil
 	}
@@ -19,7 +19,7 @@ func createTestToken(ta App, user *models.User) (string, error) {
 }
 
 // CreateTestGroup creates a group doc for test setup
-func createTestGroup(ta App, groupType int) *models.Group {
+func createTestGroup(ta *App, groupType int) *models.Group {
 	group := models.Group{}
 	if groupType == 1 {
 		group.Id = "000000000000000000000002"
@@ -42,7 +42,7 @@ func createTestGroup(ta App, groupType int) *models.Group {
 }
 
 // createTestUser creates a user doc for test setup
-func createTestUser(ta App, userType int) *models.User {
+func createTestUser(ta *App, userType int) *models.User {
 	user := models.User{}
 	if userType == 1 {
 		user.Id = "000000000000000000000012"
@@ -77,7 +77,7 @@ func createTestUser(ta App, userType int) *models.User {
 }
 
 // createTestTask creates a task doc for test setup
-func createTestTask(ta App, taskType int) *models.Task {
+func createTestTask(ta *App, taskType int) *models.Task {
 	task := models.Task{}
 	now := time.Now()
 	if taskType == 1 {

@@ -203,6 +203,20 @@ type PasswordUpdate struct {
 	NewPassword     string
 }
 
+// Validate a PasswordUpdate action
+func (r *PasswordUpdate) Validate() error {
+	if r.CurrentPassword == "" {
+		return errors.New("missing current password")
+	}
+	if r.NewPassword == "" {
+		return errors.New("missing new password")
+	}
+	if r.CurrentPassword == r.NewPassword {
+		return errors.New("passwords cannot match")
+	}
+	return nil
+}
+
 // LoadPasswordUpdateProto inputs an authService.LoginReq and returns a PasswordUpdate
 func LoadPasswordUpdateProto(u *authService.UpdatePasswordReq) *PasswordUpdate {
 	return &PasswordUpdate{
