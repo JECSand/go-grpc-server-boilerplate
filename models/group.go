@@ -59,6 +59,14 @@ func LoadGroupUpdateProto(u *groupsService.UpdateReq) *Group {
 	}
 }
 
+// LoadGroupFindProto inputs a groupsService.FindReq and returns a Group
+func LoadGroupFindProto(u *groupsService.FindReq) *Group {
+	return &Group{
+		Id:   u.GetGroup().GetId(),
+		Name: u.GetGroup().GetName(),
+	}
+}
+
 // CheckID determines whether a specified ID is set or not
 func (g *Group) CheckID(chkId string) bool {
 	switch chkId {

@@ -33,6 +33,11 @@ func NewUserService(log utilities.Logger, ts *TokenService, u UserDataService, g
 // Create is a New User
 func (u *UserService) Create(ctx context.Context, req *usersService.CreateReq) (*usersService.CreateRes, error) {
 	user := models.LoadUserCreateProto(req)
+	err := user.Validate("create")
+	if err != nil {
+		u.log.Errorf("user.Validate: %v", err)
+		return nil, utilities.ErrorResponse(err, err.Error())
+	}
 	accessToken, err := utilities.GetTokenFromContext(ctx)
 	if err != nil {
 		u.log.Errorf("utilities.GetTokenFromContext: %v", err)
@@ -105,7 +110,7 @@ func (u *UserService) Get(ctx context.Context, req *usersService.GetReq) (*users
 // Find Users from an input query
 func (u *UserService) Find(ctx context.Context, req *usersService.FindReq) (*usersService.FindRes, error) {
 	// TODO NEXT FIX - valid req.GetQuery() authenticity / scope
-	users, err := u.userDB.UsersQuery(ctx, req.GetQuery(), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	users, err := u.userDB.UsersQuery(ctx, models.LoadUserFindProto(req), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("userDB.UsersQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
@@ -132,7 +137,7 @@ func (u *UserService) GetGroupUsers(ctx context.Context, req *usersService.GetGr
 		u.log.Errorf("models.VerifyGroupRequestScope: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
-	users, err := u.userDB.UsersQuery(ctx, groupId, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	users, err := u.userDB.UsersQuery(ctx, &models.User{GroupId: groupId}, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("userDB.UsersQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())

@@ -18,7 +18,7 @@ type UserDataService interface {
 	UserFind(u *models.User) (*models.User, error)
 	UserUpdate(u *models.User) (*models.User, error)
 	UserDocInsert(u *models.User) (*models.User, error)
-	UsersQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.UsersRes, error)
+	UsersQuery(ctx context.Context, u *models.User, pagination *utilities.Pagination) (*models.UsersRes, error)
 }
 
 // GroupDataService is an interface to database.GroupService
@@ -30,7 +30,7 @@ type GroupDataService interface {
 	GroupDeleteMany(g *models.Group) (*models.Group, error)
 	GroupUpdate(g *models.Group) (*models.Group, error)
 	GroupDocInsert(g *models.Group) (*models.Group, error)
-	GroupsQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.GroupsRes, error)
+	GroupsQuery(ctx context.Context, g *models.Group, pagination *utilities.Pagination) (*models.GroupsRes, error)
 }
 
 // TaskDataService is an interface to database.TaskService
@@ -42,7 +42,7 @@ type TaskDataService interface {
 	TaskDeleteMany(g *models.Task) (*models.Task, error)
 	TaskUpdate(g *models.Task) (*models.Task, error)
 	TaskDocInsert(g *models.Task) (*models.Task, error)
-	TasksQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.TasksRes, error)
+	TasksQuery(ctx context.Context, g *models.Task, pagination *utilities.Pagination) (*models.TasksRes, error)
 }
 
 // FileDataService is an interface to database.FileService

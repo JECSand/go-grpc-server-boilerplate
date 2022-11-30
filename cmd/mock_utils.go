@@ -76,6 +76,41 @@ func createTestUser(ta *App, userType int) *models.User {
 	return &user
 }
 
+// createTestAdminUser creates an admin user doc for test setup
+func createTestAdminUser(ta *App, userType int, root bool) *models.User {
+	user := models.User{}
+	if userType == 1 {
+		user.Id = "000000000000000000000014"
+		user.Username = "test_admin"
+		user.Password = "abc123"
+		user.FirstName = "Jill"
+		user.LastName = "Admin"
+		user.Email = "admin1@email.com"
+		user.Role = "admin"
+		user.RootAdmin = root
+		user.GroupId = "000000000000000000000002"
+		user.LastModified = time.Now().UTC()
+		user.CreatedAt = time.Now().UTC()
+	} else {
+		user.Id = "000000000000000000000015"
+		user.Username = "test_admin2"
+		user.Password = "abc123"
+		user.FirstName = "Bill"
+		user.LastName = "Admin"
+		user.Email = "admin2@email.com.com"
+		user.Role = "admin"
+		user.RootAdmin = root
+		user.GroupId = "000000000000000000000003"
+		user.LastModified = time.Now().UTC()
+		user.CreatedAt = time.Now().UTC()
+	}
+	_, err := ta.server.UserDataService.UserDocInsert(&user)
+	if err != nil {
+		panic(err)
+	}
+	return &user
+}
+
 // createTestTask creates a task doc for test setup
 func createTestTask(ta *App, taskType int) *models.Task {
 	task := models.Task{}

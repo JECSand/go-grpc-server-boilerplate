@@ -78,7 +78,7 @@ message GetGroupUsersRes {
 }
 
 message FindReq {
-  string Query = 1;
+  User User = 1;
   int64 Page = 2;
   int64 Size = 3;
 }

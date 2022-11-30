@@ -113,6 +113,19 @@ func LoadUserUpdateProto(u *usersService.UpdateReq) *User {
 	}
 }
 
+// LoadUserFindProto inputs a usersService.FindReq and returns a User
+func LoadUserFindProto(u *usersService.FindReq) *User {
+	return &User{
+		Id:        u.GetUser().GetId(),
+		Username:  u.GetUser().GetUsername(),
+		FirstName: u.GetUser().GetFirstName(),
+		LastName:  u.GetUser().GetLastName(),
+		Email:     u.GetUser().GetEmail(),
+		Role:      u.GetUser().GetRole(),
+		GroupId:   u.GetUser().GetGroupId(),
+	}
+}
+
 // LoadScope scopes the User struct
 func (g *User) LoadScope(scopeUser *User, valCase string) {
 	switch valCase {
@@ -221,9 +234,6 @@ func (g *User) Validate(valCase string) (err error) {
 		}
 		if g.Password == "" {
 			missingFields = append(missingFields, "password")
-		}
-		if !g.CheckID("group_id") {
-			missingFields = append(missingFields, "group_id")
 		}
 	case "update":
 		if !g.CheckID("id") && g.Email == "" {

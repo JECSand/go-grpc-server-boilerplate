@@ -3,10 +3,10 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"sync"
@@ -276,20 +276,20 @@ func (p *UserService) UserDocInsert(u *models.User) (*models.User, error) {
 }
 
 // UsersQuery is used for a paginated users search
-func (p *UserService) UsersQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.UsersRes, error) {
-	f := bson.D{
-		{Key: "$or", Value: bson.A{
-			bson.D{{Key: "group_id", Value: primitive.Regex{
-				Pattern: query,
-				Options: "gi",
-			}}},
-			bson.D{{Key: "role", Value: primitive.Regex{
-				Pattern: query,
-				Options: "gi",
-			}}},
-		}},
+func (p *UserService) UsersQuery(ctx context.Context, u *models.User, pagination *utilities.Pagination) (*models.UsersRes, error) {
+	fmt.Println("\n\nCHECK USER MODEL: ", u)
+	um, err := newUserModel(u)
+	if err != nil {
+		return nil, err
 	}
+	f, err := um.bsonFilter()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("\n\nCHECK FILTER: ", f)
 	count, err := p.collection.CountDocuments(ctx, f)
+	fmt.Println("\n\nCHECK COUNT: ", count)
+	fmt.Println("\n\nCHECK COUNT ERROR: ", err)
 	if err != nil {
 		return nil, err
 	}

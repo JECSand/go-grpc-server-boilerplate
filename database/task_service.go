@@ -5,8 +5,6 @@ import (
 	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
@@ -190,18 +188,14 @@ func (p *TaskService) TaskDocInsert(g *models.Task) (*models.Task, error) {
 }
 
 // TasksQuery is used for a paginated tasks search
-func (p *TaskService) TasksQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.TasksRes, error) {
-	f := bson.D{
-		{Key: "$or", Value: bson.A{
-			bson.D{{Key: "group_id", Value: primitive.Regex{
-				Pattern: query,
-				Options: "gi",
-			}}},
-			bson.D{{Key: "user_id", Value: primitive.Regex{
-				Pattern: query,
-				Options: "gi",
-			}}},
-		}},
+func (p *TaskService) TasksQuery(ctx context.Context, g *models.Task, pagination *utilities.Pagination) (*models.TasksRes, error) {
+	um, err := newTaskModel(g)
+	if err != nil {
+		return nil, err
+	}
+	f, err := um.bsonFilter()
+	if err != nil {
+		return nil, err
 	}
 	count, err := p.collection.CountDocuments(ctx, f)
 	if err != nil {
