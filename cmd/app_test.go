@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	authsService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
+	usersService "github.com/JECSand/go-grpc-server-boilerplate/protos/user"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"os"
 	"testing"
@@ -25,10 +26,18 @@ func setup() *App {
 	return ta
 }
 
-func setupTestUser(ta *App) *models.User {
-	_ = createTestGroup(ta, 1)
-	return createTestUser(ta, 1)
+func setupTestUser(ta *App, group bool, tType int) *models.User {
+	if group {
+		_ = createTestGroup(ta, tType)
+	}
+	return createTestUser(ta, tType)
+}
 
+func setupTestAdminUser(ta *App, root bool, group bool, tType int) *models.User {
+	if group {
+		_ = createTestGroup(ta, tType)
+	}
+	return createTestAdminUser(ta, tType, root)
 }
 
 func setupTestAuthCtx(ta *App, ctx context.Context, tUser *models.User, scenario string) context.Context {
@@ -208,7 +217,7 @@ func Test_AuthLogout(t *testing.T) {
 	conn, closer := ta.server.StartTest(ctx)
 	client := authsService.NewAuthServiceClient(conn)
 	defer closer()
-	tUser := setupTestUser(ta)
+	tUser := setupTestUser(ta, true, 1)
 	// Defining our test slice. Each unit test should have the following properties:
 	tests := []struct {
 		name    string                  // The name of the test
@@ -271,7 +280,7 @@ func Test_AuthRefresh(t *testing.T) {
 	conn, closer := ta.server.StartTest(ctx)
 	client := authsService.NewAuthServiceClient(conn)
 	defer closer()
-	tUser := setupTestUser(ta)
+	tUser := setupTestUser(ta, true, 1)
 	// Defining our test slice. Each unit test should have the following properties:
 	tests := []struct {
 		name    string                   // The name of the test
@@ -334,7 +343,7 @@ func Test_AuthGenerateKey(t *testing.T) {
 	conn, closer := ta.server.StartTest(ctx)
 	client := authsService.NewAuthServiceClient(conn)
 	defer closer()
-	tUser := setupTestUser(ta)
+	tUser := setupTestUser(ta, true, 1)
 	// Defining our test slice. Each unit test should have the following properties:
 	tests := []struct {
 		name    string                       // The name of the test
@@ -397,7 +406,7 @@ func Test_AuthUpdatePassword(t *testing.T) {
 	conn, closer := ta.server.StartTest(ctx)
 	client := authsService.NewAuthServiceClient(conn)
 	defer closer()
-	tUser := setupTestUser(ta)
+	tUser := setupTestUser(ta, true, 1)
 	// Defining our test slice. Each unit test should have the following properties:
 	tests := []struct {
 		name    string                          // The name of the test
@@ -491,6 +500,213 @@ func Test_AuthUpdatePassword(t *testing.T) {
 /*
 USER TESTS
 */
+
+func Test_UserCreate(t *testing.T) {
+	ctx := context.Background()
+	ta := setup()
+	conn, closer := ta.server.StartTest(ctx)
+	client := usersService.NewUserServiceClient(conn)
+	defer closer()
+	tUser := setupTestAdminUser(ta, false, true, 1)
+	// Defining our test slice. Each unit test should have the following properties:
+	tests := []struct {
+		name    string                  // The name of the test
+		res     *usersService.CreateRes // What out instance we want our function to return.
+		wantErr bool                    // whether we want an error.
+		req     *usersService.CreateReq // The input of the test
+	}{
+		// Here we're declaring each unit test input and output data as defined before
+		{
+			"success",
+			&usersService.CreateRes{User: &usersService.User{Username: "tester123"}},
+			false,
+			&usersService.CreateReq{
+				FirstName: "Jack",
+				LastName:  "Testings",
+				Email:     "tester@test.com",
+				Username:  "tester123",
+				Password:  "321test123",
+			},
+		},
+		{
+			"taken email",
+			nil,
+			true,
+			&usersService.CreateReq{
+				FirstName: "Jack",
+				LastName:  "Testings",
+				Email:     "master@test.com",
+				Username:  "tester123",
+				Password:  "321test123",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "missing token":
+				ctx = setupTestAuthCtx(ta, ctx, tUser, "missing")
+			case "invalid token":
+				ctx = setupTestAuthCtx(ta, ctx, tUser, "invalid")
+			default:
+				ctx = setupTestAuthCtx(ta, ctx, tUser, "")
+			}
+			out, err := client.Create(ctx, tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usersService.Create() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			switch tt.name {
+			case "success":
+				if out.User.Username != tt.res.User.Username || out.User.Id == "" {
+					t.Errorf("usersService.Create() \nWant: %q\nGot: %q\n", out.User.Username, tt.res.User.Username)
+				}
+			default:
+				if out != tt.res { // Asserting whether we get the correct wanted value
+					t.Errorf("usersService.Create() \nWant: %q\\nGot: %q\n", out, tt.res)
+				}
+			}
+		})
+	}
+}
+
+func Test_UserUpdate(t *testing.T) {
+	ctx := context.Background()
+	ta := setup()
+	conn, closer := ta.server.StartTest(ctx)
+	client := usersService.NewUserServiceClient(conn)
+	defer closer()
+	tUser := setupTestUser(ta, true, 1)
+	tAdmin := setupTestAdminUser(ta, false, false, 1)
+	// Defining our test slice. Each unit test should have the following properties:
+	tests := []struct {
+		name    string                  // The name of the test
+		res     *usersService.UpdateRes // What out instance we want our function to return.
+		wantErr bool                    // whether we want an error.
+		req     *usersService.UpdateReq // The input of the test
+	}{
+		// Here we're declaring each unit test input and output data as defined before
+		{
+			"success",
+			&usersService.UpdateRes{User: &usersService.User{Username: "tester1233"}},
+			false,
+			&usersService.UpdateReq{
+				Id:        tUser.Id,
+				FirstName: "Jack",
+				LastName:  "Testings",
+				Username:  "tester1233",
+				Password:  "321test123",
+			},
+		},
+		{
+			"missing id",
+			nil,
+			true,
+			&usersService.UpdateReq{
+				FirstName: "Jack",
+				LastName:  "Testings",
+				Email:     "master@test.com",
+				Username:  "tester123",
+				Password:  "321test123",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "missing token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "missing")
+			case "invalid token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "invalid")
+			default:
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "")
+			}
+			out, err := client.Update(ctx, tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usersService.Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			switch tt.name {
+			case "success":
+				if out.User.Username != tt.res.User.Username || out.User.Id == "" {
+					t.Errorf("usersService.Update() \nWant: %q\nGot: %q\n", out.User.Username, tt.res.User.Username)
+				}
+			default:
+				if out != tt.res { // Asserting whether we get the correct wanted value
+					t.Errorf("usersService.Update() \nWant: %q\\nGot: %q\n", out, tt.res)
+				}
+			}
+		})
+	}
+}
+
+func Test_UserGet(t *testing.T) {
+	ctx := context.Background()
+	ta := setup()
+	conn, closer := ta.server.StartTest(ctx)
+	client := usersService.NewUserServiceClient(conn)
+	defer closer()
+	tUser := setupTestUser(ta, true, 1)
+	tAdmin := setupTestAdminUser(ta, false, false, 1)
+	// Defining our test slice. Each unit test should have the following properties:
+	tests := []struct {
+		name    string               // The name of the test
+		res     *usersService.GetRes // What out instance we want our function to return.
+		wantErr bool                 // whether we want an error.
+		req     *usersService.GetReq // The input of the test
+	}{
+		// Here we're declaring each unit test input and output data as defined before
+		{
+			"success",
+			&usersService.GetRes{User: &usersService.User{Username: tUser.Username}},
+			false,
+			&usersService.GetReq{
+				Id: tUser.Id,
+			},
+		},
+		{
+			"missing id",
+			nil,
+			true,
+			&usersService.GetReq{},
+		},
+		{
+			"not found",
+			nil,
+			true,
+			&usersService.GetReq{
+				Id: "000000000000000000000092",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "missing token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "missing")
+			case "invalid token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "invalid")
+			default:
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "")
+			}
+			out, err := client.Get(ctx, tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usersService.Get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			switch tt.name {
+			case "success":
+				if out.User.Username != tt.res.User.Username || out.User.Id == "" {
+					t.Errorf("usersService.Get() \nWant: %q\nGot: %q\n", out.User.Username, tt.res.User.Username)
+				}
+			default:
+				if out != tt.res { // Asserting whether we get the correct wanted value
+					t.Errorf("usersService.Get() \nWant: %q\\nGot: %q\n", out, tt.res)
+				}
+			}
+		})
+	}
+}
 
 /*
 GROUP TESTS

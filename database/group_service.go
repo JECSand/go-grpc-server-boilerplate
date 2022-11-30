@@ -5,8 +5,6 @@ import (
 	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
@@ -147,14 +145,14 @@ func (p *GroupService) GroupDocInsert(g *models.Group) (*models.Group, error) {
 }
 
 // GroupsQuery is used for a paginated groups search
-func (p *GroupService) GroupsQuery(ctx context.Context, query string, pagination *utilities.Pagination) (*models.GroupsRes, error) {
-	f := bson.D{
-		{Key: "$or", Value: bson.A{
-			bson.D{{Key: "name", Value: primitive.Regex{
-				Pattern: query,
-				Options: "gi",
-			}}},
-		}},
+func (p *GroupService) GroupsQuery(ctx context.Context, g *models.Group, pagination *utilities.Pagination) (*models.GroupsRes, error) {
+	um, err := newGroupModel(g)
+	if err != nil {
+		return nil, err
+	}
+	f, err := um.bsonFilter()
+	if err != nil {
+		return nil, err
 	}
 	count, err := p.collection.CountDocuments(ctx, f)
 	if err != nil {

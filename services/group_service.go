@@ -88,7 +88,7 @@ func (u *GroupService) Get(ctx context.Context, req *groupsService.GetReq) (*gro
 // Find Groups from an input query
 func (u *GroupService) Find(ctx context.Context, req *groupsService.FindReq) (*groupsService.FindRes, error) {
 	// TODO NEXT FIX - valid req.GetQuery() authenticity / scope
-	groups, err := u.groupDB.GroupsQuery(ctx, req.GetQuery(), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	groups, err := u.groupDB.GroupsQuery(ctx, models.LoadGroupFindProto(req), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("groupDB.GroupsQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())

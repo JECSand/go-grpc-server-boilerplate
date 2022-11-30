@@ -43,7 +43,7 @@ message GetRes {
 }
 
 message FindReq {
-  string Query = 1;
+  Group Group = 1;
   int64 Page = 2;
   int64 Size = 3;
 }

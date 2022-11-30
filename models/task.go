@@ -88,6 +88,17 @@ func LoadTaskUpdateProto(u *tasksService.UpdateReq) *Task {
 	}
 }
 
+// LoadTaskFindProto inputs a tasksService.FindReq and returns a Task
+func LoadTaskFindProto(u *tasksService.FindReq) *Task {
+	return &Task{
+		Id:      u.GetTask().GetId(),
+		Status:  TaskStatus(u.GetTask().GetStatus().Number()),
+		Due:     u.GetTask().GetDue().AsTime(),
+		UserId:  u.GetTask().GetUserId(),
+		GroupId: u.GetTask().GetGroupId(),
+	}
+}
+
 // LoadScope scopes the Task struct
 func (g *Task) LoadScope(scopeUser *User) {
 	if !scopeUser.RootAdmin {

@@ -103,7 +103,7 @@ func (u *TaskService) Get(ctx context.Context, req *tasksService.GetReq) (*tasks
 // Find Tasks from an input query
 func (u *TaskService) Find(ctx context.Context, req *tasksService.FindReq) (*tasksService.FindRes, error) {
 	// TODO NEXT FIX - valid req.GetQuery() authenticity / scope
-	tasks, err := u.taskDB.TasksQuery(ctx, req.GetQuery(), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	tasks, err := u.taskDB.TasksQuery(ctx, models.LoadTaskFindProto(req), utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("taskDB.TasksQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
@@ -130,7 +130,7 @@ func (u *TaskService) GetGroupTasks(ctx context.Context, req *tasksService.GetGr
 		u.log.Errorf("models.VerifyGroupRequestScope: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
-	tasks, err := u.taskDB.TasksQuery(ctx, groupId, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	tasks, err := u.taskDB.TasksQuery(ctx, &models.Task{GroupId: groupId}, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("taskDB.TasksQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
@@ -166,7 +166,7 @@ func (u *TaskService) GetUserTasks(ctx context.Context, req *tasksService.GetUse
 		u.log.Errorf("taskDB.TasksQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
 	}
-	tasks, err := u.taskDB.TasksQuery(ctx, user.Id, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
+	tasks, err := u.taskDB.TasksQuery(ctx, &models.Task{UserId: user.Id}, utilities.NewPaginationQuery(int(req.GetSize()), int(req.GetPage())))
 	if err != nil {
 		u.log.Errorf("taskDB.TasksQuery: %v", err)
 		return nil, utilities.ErrorResponse(err, err.Error())
