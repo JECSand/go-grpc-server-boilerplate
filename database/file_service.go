@@ -2,8 +2,10 @@ package database
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
+	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"sync"
 )
@@ -262,4 +264,43 @@ func (p *FileService) RetrieveFile(g *models.File) (*bytes.Buffer, error) {
 		return p.downloadFileFromBucket(gm)
 	}
 	return nil, errors.New("file not found")
+}
+
+// FilesQuery is used for a paginated files search
+func (p *FileService) FilesQuery(ctx context.Context, g *models.File, pagination *utilities.Pagination) (*models.FilesRes, error) {
+	um, err := newFileModel(g)
+	if err != nil {
+		return nil, err
+	}
+	f, err := um.bsonFilter()
+	if err != nil {
+		return nil, err
+	}
+	count, err := p.collection.CountDocuments(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	if count == 0 {
+		return &models.FilesRes{
+			TotalCount: 0,
+			TotalPages: 0,
+			Page:       0,
+			Size:       0,
+			HasMore:    false,
+			Files:      make([]*models.File, 0),
+		}, nil
+	}
+	ums, err := p.fileHandler.PaginatedFind(ctx, um, pagination)
+	if err != nil {
+		return nil, err
+	}
+	files := rootFiles(ums)
+	return &models.FilesRes{
+		TotalCount: count,
+		TotalPages: int64(pagination.GetTotalPages(int(count))),
+		Page:       int64(pagination.GetPage()),
+		Size:       int64(pagination.GetSize()),
+		HasMore:    pagination.GetHasMore(int(count)),
+		Files:      files,
+	}, nil
 }

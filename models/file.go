@@ -147,3 +147,13 @@ func (g *File) BuildUpdate(cur *File) {
 		g.BucketName = cur.BucketName
 	}
 }
+
+// FilesRes Multiple Files in a paginated response
+type FilesRes struct {
+	TotalCount int64   `json:"total_count"`
+	TotalPages int64   `json:"total_pages"`
+	Page       int64   `json:"page"`
+	Size       int64   `json:"size"`
+	HasMore    bool    `json:"has_more"`
+	Files      []*File `json:"files"`
+}

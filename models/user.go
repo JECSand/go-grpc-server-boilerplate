@@ -311,6 +311,7 @@ type UsersRes struct {
 func (p *UsersRes) ToProto() []*usersService.User {
 	uList := make([]*usersService.User, 0, len(p.Users))
 	for _, u := range p.Users {
+		u.Password = ""
 		uList = append(uList, u.ToProto())
 	}
 	return uList

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -211,27 +210,11 @@ func (p *TaskService) TasksQuery(ctx context.Context, g *models.Task, pagination
 			Tasks:      make([]*models.Task, 0),
 		}, nil
 	}
-	limit := int64(pagination.GetLimit())
-	skip := int64(pagination.GetOffset())
-	cursor, err := p.collection.Find(ctx, f, &options.FindOptions{
-		Limit: &limit,
-		Skip:  &skip,
-	})
+	ums, err := p.taskHandler.PaginatedFind(ctx, um, pagination)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
-	tasks := make([]*models.Task, 0, pagination.GetSize())
-	for cursor.Next(ctx) {
-		var u taskModel
-		if err = cursor.Decode(&u); err != nil {
-			return nil, err
-		}
-		tasks = append(tasks, u.toRoot())
-	}
-	if err = cursor.Err(); err != nil {
-		return nil, err
-	}
+	tasks := rootTasks(ums)
 	return &models.TasksRes{
 		TotalCount: count,
 		TotalPages: int64(pagination.GetTotalPages(int(count))),

@@ -200,3 +200,10 @@ func (u *fileModel) toRoot() *models.File {
 		DeletedAt:    u.DeletedAt,
 	}
 }
+
+func rootFiles(ms []*fileModel) (users []*models.File) {
+	for _, m := range ms {
+		users = append(users, m.toRoot())
+	}
+	return
+}

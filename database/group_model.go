@@ -149,3 +149,10 @@ func (g *groupModel) toRoot() *models.Group {
 		DeletedAt:    g.DeletedAt,
 	}
 }
+
+func rootGroups(ms []*groupModel) (users []*models.Group) {
+	for _, m := range ms {
+		users = append(users, m.toRoot())
+	}
+	return
+}

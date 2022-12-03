@@ -708,6 +708,200 @@ func Test_UserGet(t *testing.T) {
 	}
 }
 
+func Test_UserFind(t *testing.T) {
+	ctx := context.Background()
+	ta := setup()
+	conn, closer := ta.server.StartTest(ctx)
+	client := usersService.NewUserServiceClient(conn)
+	defer closer()
+	tUser := setupTestUser(ta, true, 1)
+	tAdmin := setupTestAdminUser(ta, false, false, 1)
+	// Defining our test slice. Each unit test should have the following properties:
+	tests := []struct {
+		name    string                // The name of the test
+		res     *usersService.FindRes // What out instance we want our function to return.
+		wantErr bool                  // whether we want an error.
+		req     *usersService.FindReq // The input of the test
+	}{
+		// Here we're declaring each unit test input and output data as defined before
+		{
+			"success",
+			&usersService.FindRes{
+				Users: []*usersService.User{{Username: tUser.Username}, {Username: tAdmin.Username}},
+				Page:  1,
+				Size:  2,
+			},
+			false,
+			&usersService.FindReq{
+				User: &usersService.User{GroupId: tUser.GroupId},
+				Page: 1,
+				Size: 10,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "missing token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "missing")
+			case "invalid token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "invalid")
+			default:
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "")
+			}
+			out, err := client.Find(ctx, tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usersService.Find() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			switch tt.name {
+			case "success":
+				if out.Users[0].Username != tt.res.Users[0].Username {
+					t.Errorf("usersService.Find() \nWant: %q\nGot: %q\n", out.Users[0].Username, tt.res.Users[0].Username)
+				}
+				if out.Users[1].Username != tt.res.Users[1].Username {
+					t.Errorf("usersService.Find() \nWant: %q\nGot: %q\n", out.Users[1].Username, tt.res.Users[1].Username)
+				}
+			default:
+				if out != tt.res { // Asserting whether we get the correct wanted value
+					t.Errorf("usersService.Find() \nWant: %q\\nGot: %q\n", out, tt.res)
+				}
+			}
+		})
+	}
+}
+
+func Test_UserGetGroup(t *testing.T) {
+	ctx := context.Background()
+	ta := setup()
+	conn, closer := ta.server.StartTest(ctx)
+	client := usersService.NewUserServiceClient(conn)
+	defer closer()
+	tUser := setupTestUser(ta, true, 1)
+	tAdmin := setupTestAdminUser(ta, false, false, 1)
+	// Defining our test slice. Each unit test should have the following properties:
+	tests := []struct {
+		name    string                         // The name of the test
+		res     *usersService.GetGroupUsersRes // What out instance we want our function to return.
+		wantErr bool                           // whether we want an error.
+		req     *usersService.GetGroupUsersReq // The input of the test
+	}{
+		// Here we're declaring each unit test input and output data as defined before
+		{
+			"success",
+			&usersService.GetGroupUsersRes{
+				Users: []*usersService.User{{Username: tUser.Username}, {Username: tAdmin.Username}},
+				Page:  1,
+				Size:  2,
+			},
+			false,
+			&usersService.GetGroupUsersReq{
+				GroupId: tUser.GroupId,
+				Page:    1,
+				Size:    10,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "missing token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "missing")
+			case "invalid token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "invalid")
+			default:
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "")
+			}
+			out, err := client.GetGroupUsers(ctx, tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usersService.GetGroupUsers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			switch tt.name {
+			case "success":
+				if out.Users[0].Username != tt.res.Users[0].Username {
+					t.Errorf("usersService.GetGroupUsers() \nWant: %q\nGot: %q\n", out.Users[0].Username, tt.res.Users[0].Username)
+				}
+				if out.Users[1].Username != tt.res.Users[1].Username {
+					t.Errorf("usersService.GetGroupUsers() \nWant: %q\nGot: %q\n", out.Users[1].Username, tt.res.Users[1].Username)
+				}
+			default:
+				if out != tt.res { // Asserting whether we get the correct wanted value
+					t.Errorf("usersService.GetGroupUsers() \nWant: %q\\nGot: %q\n", out, tt.res)
+				}
+			}
+		})
+	}
+}
+
+func Test_UserDelete(t *testing.T) {
+	ctx := context.Background()
+	ta := setup()
+	conn, closer := ta.server.StartTest(ctx)
+	client := usersService.NewUserServiceClient(conn)
+	defer closer()
+	tUser := setupTestUser(ta, true, 1)
+	tAdmin := setupTestAdminUser(ta, false, false, 1)
+	// Defining our test slice. Each unit test should have the following properties:
+	tests := []struct {
+		name    string                  // The name of the test
+		res     *usersService.DeleteRes // What out instance we want our function to return.
+		wantErr bool                    // whether we want an error.
+		req     *usersService.DeleteReq // The input of the test
+	}{
+		// Here we're declaring each unit test input and output data as defined before
+		{
+			"success",
+			&usersService.DeleteRes{User: &usersService.User{Username: tUser.Username}},
+			false,
+			&usersService.DeleteReq{
+				Id: tUser.Id,
+			},
+		},
+		{
+			"missing id",
+			nil,
+			true,
+			&usersService.DeleteReq{},
+		},
+		{
+			"not found",
+			nil,
+			true,
+			&usersService.DeleteReq{
+				Id: "000000000000000000000092",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "missing token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "missing")
+			case "invalid token":
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "invalid")
+			default:
+				ctx = setupTestAuthCtx(ta, ctx, tAdmin, "")
+			}
+			out, err := client.Delete(ctx, tt.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usersService.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			switch tt.name {
+			case "success":
+				if out.User.Username != tt.res.User.Username || out.User.Id == "" {
+					t.Errorf("usersService.Delete() \nWant: %q\nGot: %q\n", out.User.Username, tt.res.User.Username)
+				}
+			default:
+				if out != tt.res { // Asserting whether we get the correct wanted value
+					t.Errorf("usersService.Delete() \nWant: %q\\nGot: %q\n", out, tt.res)
+				}
+			}
+		})
+	}
+}
+
 /*
 GROUP TESTS
 */

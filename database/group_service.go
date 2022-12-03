@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -168,27 +167,11 @@ func (p *GroupService) GroupsQuery(ctx context.Context, g *models.Group, paginat
 			Groups:     make([]*models.Group, 0),
 		}, nil
 	}
-	limit := int64(pagination.GetLimit())
-	skip := int64(pagination.GetOffset())
-	cursor, err := p.collection.Find(ctx, f, &options.FindOptions{
-		Limit: &limit,
-		Skip:  &skip,
-	})
+	ums, err := p.handler.PaginatedFind(ctx, um, pagination)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
-	groups := make([]*models.Group, 0, pagination.GetSize())
-	for cursor.Next(ctx) {
-		var u groupModel
-		if err = cursor.Decode(&u); err != nil {
-			return nil, err
-		}
-		groups = append(groups, u.toRoot())
-	}
-	if err = cursor.Err(); err != nil {
-		return nil, err
-	}
+	groups := rootGroups(ums)
 	return &models.GroupsRes{
 		TotalCount: count,
 		TotalPages: int64(pagination.GetTotalPages(int(count))),

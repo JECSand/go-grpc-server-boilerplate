@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
@@ -44,6 +45,7 @@ type DBCursor interface {
 	Next(ctx context.Context) bool
 	Decode(val interface{}) error
 	Close(ctx context.Context) error
+	Err() error
 }
 
 // checkCursorENV returns a DBCursor based on the ENV
@@ -232,6 +234,50 @@ func (h *DBHandler[T]) FindMany(filter T) ([]T, error) {
 			return m, err
 		}
 		m = append(m, md)
+	}
+	return m, nil
+}
+
+// PaginatedFind is used to get a slice of dbModels from the db with custom filter
+func (h *DBHandler[T]) PaginatedFind(ctx context.Context, filter T, pagination *utilities.Pagination) ([]T, error) {
+	var m []T
+	f, err := filter.bsonFilter()
+	if err != nil {
+		return m, err
+	}
+	var cur *mongo.Cursor
+	limit := int64(pagination.GetLimit())
+	skip := int64(pagination.GetOffset())
+	if len(f) > 0 {
+		cur, err = h.collection.Find(ctx, f, &options.FindOptions{
+			Limit: &limit,
+			Skip:  &skip,
+		})
+	} else {
+		cur, err = h.collection.Find(ctx, bson.M{}, &options.FindOptions{
+			Limit: &limit,
+			Skip:  &skip,
+		})
+	}
+	if err != nil {
+		return m, err
+	}
+	cursor := checkCursorENV(cur)
+	defer cursor.Close(ctx)
+	m = make([]T, 0, pagination.GetSize())
+	for cursor.Next(ctx) {
+		var md T
+		if err = cursor.Decode(&md); err != nil {
+			return nil, err
+		}
+		err = md.postProcess()
+		if err != nil {
+			return m, err
+		}
+		m = append(m, md)
+	}
+	if err = cursor.Err(); err != nil {
+		return nil, err
 	}
 	return m, nil
 }
