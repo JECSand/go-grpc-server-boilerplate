@@ -54,6 +54,7 @@ type FileDataService interface {
 	FileDeleteMany(g []*models.File) error
 	FileUpdate(g *models.File, content []byte) (*models.File, error)
 	RetrieveFile(g *models.File) (*bytes.Buffer, error)
+	FilesQuery(ctx context.Context, g *models.File, pagination *utilities.Pagination) (*models.FilesRes, error)
 }
 
 // BlacklistDataService is an interface to database.BlacklistService

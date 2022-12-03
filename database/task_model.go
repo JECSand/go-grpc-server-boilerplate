@@ -195,3 +195,10 @@ func (u *taskModel) toRoot() *models.Task {
 		DeletedAt:    u.DeletedAt,
 	}
 }
+
+func rootTasks(ms []*taskModel) (users []*models.Task) {
+	for _, m := range ms {
+		users = append(users, m.toRoot())
+	}
+	return
+}

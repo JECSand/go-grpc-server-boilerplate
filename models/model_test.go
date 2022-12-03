@@ -51,7 +51,6 @@ func Test_ValidateUser(t *testing.T) {
 			&User{
 				Username: "testUser",
 				Email:    "test3@example.com",
-				Password: "abc123",
 				GroupId:  "000000000000000000000000",
 			},
 			"create",

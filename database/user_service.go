@@ -3,11 +3,9 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"sync"
 	"time"
@@ -277,7 +275,6 @@ func (p *UserService) UserDocInsert(u *models.User) (*models.User, error) {
 
 // UsersQuery is used for a paginated users search
 func (p *UserService) UsersQuery(ctx context.Context, u *models.User, pagination *utilities.Pagination) (*models.UsersRes, error) {
-	fmt.Println("\n\nCHECK USER MODEL: ", u)
 	um, err := newUserModel(u)
 	if err != nil {
 		return nil, err
@@ -286,10 +283,7 @@ func (p *UserService) UsersQuery(ctx context.Context, u *models.User, pagination
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("\n\nCHECK FILTER: ", f)
 	count, err := p.collection.CountDocuments(ctx, f)
-	fmt.Println("\n\nCHECK COUNT: ", count)
-	fmt.Println("\n\nCHECK COUNT ERROR: ", err)
 	if err != nil {
 		return nil, err
 	}
@@ -303,27 +297,11 @@ func (p *UserService) UsersQuery(ctx context.Context, u *models.User, pagination
 			Users:      make([]*models.User, 0),
 		}, nil
 	}
-	limit := int64(pagination.GetLimit())
-	skip := int64(pagination.GetOffset())
-	cursor, err := p.collection.Find(ctx, f, &options.FindOptions{
-		Limit: &limit,
-		Skip:  &skip,
-	})
+	ums, err := p.userHandler.PaginatedFind(ctx, um, pagination)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
-	users := make([]*models.User, 0, pagination.GetSize())
-	for cursor.Next(ctx) {
-		var u userModel
-		if err = cursor.Decode(&u); err != nil {
-			return nil, err
-		}
-		users = append(users, u.toRoot())
-	}
-	if err = cursor.Err(); err != nil {
-		return nil, err
-	}
+	users := rootUsers(ums)
 	return &models.UsersRes{
 		TotalCount: count,
 		TotalPages: int64(pagination.GetTotalPages(int(count))),

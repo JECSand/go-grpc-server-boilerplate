@@ -210,3 +210,10 @@ func (u *userModel) toRoot() *models.User {
 		DeletedAt:    u.DeletedAt,
 	}
 }
+
+func rootUsers(ms []*userModel) (users []*models.User) {
+	for _, m := range ms {
+		users = append(users, m.toRoot())
+	}
+	return
+}

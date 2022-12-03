@@ -509,6 +509,7 @@ type testMongoCursor struct {
 	Results  []byte
 	docs     []bson.D
 	curCurse int
+	err      error
 }
 
 // newTestMongoCursor initiates and returns a testMongoCursor
@@ -522,7 +523,7 @@ func newTestMongoCursor(cur *mongo.Cursor) *testMongoCursor {
 	if err != nil {
 		panic(err)
 	}
-	return &testMongoCursor{Results: cur.Current, docs: cd.Results, curCurse: 0}
+	return &testMongoCursor{Results: cur.Current, docs: cd.Results, curCurse: 0, err: nil}
 }
 
 // Next check if there's more result documents to decode
@@ -556,6 +557,11 @@ func (c *testMongoCursor) Decode(val interface{}) error {
 func (c *testMongoCursor) Close(ctx context.Context) error {
 	c.ctx = ctx
 	return nil
+}
+
+// Err returns whether the cursor had any errors
+func (c *testMongoCursor) Err() error {
+	return c.err
 }
 
 /*
@@ -849,12 +855,14 @@ func (coll *testMongoCollection) UpdateByID(ctx context.Context, id interface{},
 func (coll *testMongoCollection) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
 	var rawResults []byte
 	coll.ctx = ctx
-	fmt.Println("\n--->FIND: ", filter, opts)
+	fmt.Println("\n\n--->FIND: ", filter, opts)
 	filterDoc, err := coll.unmarshallBSON(filter)
 	if err != nil {
 		return nil, err
 	}
 	reDocs, err := coll.find(filterDoc)
+	fmt.Println("\n--->CHECK FIND OUT: ", reDocs)
+	fmt.Println("\n--->CHECK FIND ERR: ", err)
 	cd := initTestCursorData(reDocs)
 	bsonData, err := cd.toDoc()
 	if err != nil {
