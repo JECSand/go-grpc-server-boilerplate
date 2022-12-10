@@ -17,8 +17,8 @@ A MongoDB gRPC Microservice written in GoLang.
     ```bash
    $ cp conf.json.example conf.json
 
-4. run docker compose
+4. run docker compose:
    ```bash
     $ docker-compose up -d
    
-5. API Service will be reachable at: grpc://localhost:5555 
+5. API Service will be reachable at: grpc://localhost:5555 with TLS enabled.
