@@ -169,7 +169,7 @@ func (u *GroupService) deleteGroupAssets(group *models.Group, users []*models.Us
 
 // getGroupUsers asynchronously gets a group and its users from the database
 func (u *GroupService) getGroupUsers(groupId string) (*models.GroupUsers, error) {
-	var m *models.GroupUsers
+	m := &models.GroupUsers{Users: []*models.User{}}
 	gOutCh := make(chan *models.Group)
 	gErrCh := make(chan error)
 	uOutCh := make(chan []*models.User)
