@@ -121,17 +121,27 @@ func createTestTask(ta *App, taskType int) *models.Task {
 		task.Status = models.NOT_STARTED
 		task.Due = now.Add(time.Hour * 24).UTC()
 		task.Description = "Updated Task to complete"
-		task.UserId = "000000000000000000000012"
+		task.UserId = "000000000000000000000014"
+		task.GroupId = "000000000000000000000002"
+		task.LastModified = now.UTC()
+		task.CreatedAt = now.UTC()
+	} else if taskType == 2 {
+		task.Id = "000000000000000000000022"
+		task.Name = "testTask2"
+		task.Status = models.NOT_STARTED
+		task.Due = now.Add(time.Hour * 24).UTC()
+		task.Description = "Updated Task to complete"
+		task.UserId = "000000000000000000000014"
 		task.GroupId = "000000000000000000000002"
 		task.LastModified = now.UTC()
 		task.CreatedAt = now.UTC()
 	} else {
-		task.Id = "000000000000000000000022"
-		task.Name = "testTask2"
+		task.Id = "000000000000000000000023"
+		task.Name = "testTask3"
 		task.Status = models.NOT_STARTED
 		task.Due = now.Add(time.Hour * 48).UTC()
 		task.Description = "Updated Task to complete2"
-		task.UserId = "000000000000000000000013"
+		task.UserId = "000000000000000000000012"
 		task.GroupId = "000000000000000000000002"
 		task.LastModified = now.UTC()
 		task.CreatedAt = now.UTC()

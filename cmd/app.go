@@ -78,9 +78,15 @@ func (a *App) Initialize() error {
 	if docCount == 0 {
 		group.RootAdmin = true
 		group.Id = utilities.GenerateObjectID()
+		if os.Getenv("ENV") == "test" {
+			group.Id = "000000000000000000002222"
+		}
 		adminGroup, err := gService.GroupCreate(&group)
 		if err != nil {
 			return err
+		}
+		if os.Getenv("ENV") == "test" {
+			adminUser.Id = "000000000000000000002221"
 		}
 		adminUser.Username = os.Getenv("ROOT_ADMIN")
 		adminUser.Email = os.Getenv("ROOT_EMAIL")

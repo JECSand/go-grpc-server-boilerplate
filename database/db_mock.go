@@ -592,7 +592,6 @@ func newTestMongoCollection(name string) (*testMongoCollection, error) {
 
 // unmarshallBSON converts a BSON byte type back into a dbModel
 func (coll *testMongoCollection) unmarshallBSON(bsonData interface{}) (dbModel, error) {
-
 	return bsonUnmarshall(coll.name, bsonData)
 }
 
@@ -861,8 +860,6 @@ func (coll *testMongoCollection) Find(ctx context.Context, filter interface{}, o
 		return nil, err
 	}
 	reDocs, err := coll.find(filterDoc)
-	fmt.Println("\n--->CHECK FIND OUT: ", reDocs)
-	fmt.Println("\n--->CHECK FIND ERR: ", err)
 	cd := initTestCursorData(reDocs)
 	bsonData, err := cd.toDoc()
 	if err != nil {
