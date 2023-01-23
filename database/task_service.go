@@ -25,40 +25,54 @@ func NewTaskService(db DBClient, tHandler *DBHandler[*taskModel], uHandler *DBHa
 
 // checkLinkedRecords ensures the userId and groupId in the models.Task is correct
 func (p *TaskService) checkLinkedRecords(g *groupModel, u *userModel) error {
-	gOutCh := make(chan *groupModel)
-	gErrCh := make(chan error)
-	uOutCh := make(chan *userModel)
-	uErrCh := make(chan error)
-	go func() {
-		reG, err := p.groupHandler.FindOne(g)
-		gOutCh <- reG
-		gErrCh <- err
+	ctx, cancel := context.WithCancel(context.Background())
+	groupChan := make(chan *groupModel)
+	userChan := make(chan *userModel)
+	errChan := make(chan error)
+	defer func() {
+		cancel()
+		close(groupChan)
+		close(userChan)
+		close(errChan)
 	}()
 	go func() {
-		reU, err := p.userHandler.FindOne(u)
-		uOutCh <- reU
-		uErrCh <- err
+		out, err := p.groupHandler.FindOne(g)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		groupChan <- out
+		errChan <- err
 	}()
+	go func() {
+		out, err := p.userHandler.FindOne(u)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		userChan <- out
+		errChan <- err
+	}()
+	var err error
 	for i := 0; i < 4; i++ {
 		select {
-		case gOut := <-gOutCh:
-			g = gOut
-		case gErr := <-gErrCh:
-			if gErr != nil {
-				return errors.New("invalid group id")
-			}
-		case uOut := <-uOutCh:
-			u = uOut
-		case uErr := <-uErrCh:
-			if uErr != nil {
-				return errors.New("invalid user id")
+		case group := <-groupChan:
+			g = group
+		case user := <-userChan:
+			u = user
+		case err = <-errChan:
+			if err != nil {
+				err = errors.New("invalid user id")
+				break
 			}
 		}
 	}
 	if g.Id != u.GroupId {
 		return errors.New("task user is not in task group")
 	}
-	return nil
+	return err
 }
 
 // TaskCreate is used to create a new user Task

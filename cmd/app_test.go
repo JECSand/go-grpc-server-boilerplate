@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"github.com/JECSand/go-grpc-server-boilerplate/models"
 	authsService "github.com/JECSand/go-grpc-server-boilerplate/protos/auth"
 	groupsService "github.com/JECSand/go-grpc-server-boilerplate/protos/group"
@@ -10,6 +9,7 @@ import (
 	usersService "github.com/JECSand/go-grpc-server-boilerplate/protos/user"
 	"github.com/JECSand/go-grpc-server-boilerplate/utilities"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 	"os"
 	"testing"
 )
@@ -18,13 +18,12 @@ import (
 func setup() *App {
 	err := os.Setenv("ENV", "test")
 	if err != nil {
-		fmt.Println("\n\n-------->ERROR CHECK HERE A, ", err.Error())
+		log.Fatalln(err.Error())
 	}
 	ta := &App{}
 	err = ta.Initialize()
 	if err != nil {
-		fmt.Println("\n\n-------->ERROR CHECK HERE B, ", err.Error())
-		panic(err)
+		log.Fatalln(err.Error())
 	}
 	return ta
 }

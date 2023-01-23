@@ -190,33 +190,44 @@ func (u *UserService) deleteUserAssets(user *models.User) error {
 	if !user.CheckID("id") {
 		return errors.New("filter id cannot be empty for mass delete")
 	}
-	gErrCh := make(chan error)
-	uErrCh := make(chan error)
+	ctx, cancel := context.WithCancel(context.Background())
+	errChan := make(chan error)
+	defer func() {
+		cancel()
+		close(errChan)
+	}()
 	go func() {
 		if user.CheckID("image_id") {
 			_, err := u.fileDB.FileDelete(&models.File{OwnerId: user.Id, OwnerType: "user"})
-			gErrCh <- err
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			errChan <- err
 		} else {
-			gErrCh <- nil
+			errChan <- nil
 		}
 	}()
 	go func() {
 		_, err := u.taskDB.TaskDeleteMany(&models.Task{UserId: user.Id})
-		uErrCh <- err
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		errChan <- err
 	}()
+	var err error
 	for i := 0; i < 2; i++ {
 		select {
-		case gErr := <-gErrCh:
-			if gErr != nil {
-				return gErr
-			}
-		case uErr := <-uErrCh:
-			if uErr != nil {
-				return uErr
+		case err = <-errChan:
+			if err != nil {
+				break
 			}
 		}
 	}
-	return nil
+	return err
 }
 
 /*

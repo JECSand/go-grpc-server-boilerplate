@@ -133,108 +133,145 @@ func (u *GroupService) deleteGroupAssets(group *models.Group, users []*models.Us
 	if !group.CheckID("id") {
 		return errors.New("filter id cannot be empty for mass delete")
 	}
-	fErrCh := make(chan error) // Images Files Bulk Delete
-	uErrCh := make(chan error) // Delete Group Users
-	tErrCh := make(chan error) // Delete Group Tasks
+	ctx, cancel := context.WithCancel(context.Background())
+	errChan := make(chan error)
+	defer func() {
+		cancel()
+		close(errChan)
+	}()
 	go func() {
 		err := u.fileDB.FileDeleteMany(models.UsersToFiles(users))
-		fErrCh <- err
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		errChan <- err
 	}()
 	go func() {
 		_, err := u.userDB.UserDeleteMany(&models.User{GroupId: group.Id})
-		uErrCh <- err
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		errChan <- err
 	}()
 	go func() {
 		_, err := u.taskDB.TaskDeleteMany(&models.Task{GroupId: group.Id})
-		tErrCh <- err
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		errChan <- err
 	}()
+	var err error
 	for i := 0; i < 3; i++ {
 		select {
-		case fErr := <-fErrCh:
-			if fErr != nil {
-				return fErr
-			}
-		case uErr := <-uErrCh:
-			if uErr != nil {
-				return uErr
-			}
-		case tErr := <-tErrCh:
-			if tErr != nil {
-				return tErr
+		case err = <-errChan:
+			if err != nil {
+				break
 			}
 		}
 	}
-	return nil
+	return err
 }
 
 // getGroupUsers asynchronously gets a group and its users from the database
 func (u *GroupService) getGroupUsers(groupId string) (*models.GroupUsers, error) {
 	m := &models.GroupUsers{Users: []*models.User{}}
-	gOutCh := make(chan *models.Group)
-	gErrCh := make(chan error)
-	uOutCh := make(chan []*models.User)
-	uErrCh := make(chan error)
-	go func() {
-		reG, err := u.groupDB.GroupFind(&models.Group{Id: groupId})
-		gOutCh <- reG
-		gErrCh <- err
+	ctx, cancel := context.WithCancel(context.Background())
+	groupChan := make(chan *models.Group)
+	errChan := make(chan error)
+	usersChan := make(chan []*models.User)
+	defer func() {
+		cancel()
+		close(groupChan)
+		close(errChan)
+		close(usersChan)
 	}()
 	go func() {
-		reU, err := u.userDB.UsersFind(&models.User{GroupId: groupId})
-		uOutCh <- reU
-		uErrCh <- err
+		out, err := u.groupDB.GroupFind(&models.Group{Id: groupId})
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		groupChan <- out
+		errChan <- err
 	}()
+	go func() {
+		out, err := u.userDB.UsersFind(&models.User{GroupId: groupId})
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		usersChan <- out
+		errChan <- err
+	}()
+	var err error
 	for i := 0; i < 4; i++ {
 		select {
-		case gOut := <-gOutCh:
-			m.Group = gOut
-		case gErr := <-gErrCh:
-			if gErr != nil {
-				return m, gErr
-			}
-		case uOut := <-uOutCh:
-			m.Users = uOut
-		case uErr := <-uErrCh:
-			if uErr != nil {
-				return m, uErr
+		case group := <-groupChan:
+			m.Group = group
+		case users := <-usersChan:
+			m.Users = users
+		case err = <-errChan:
+			if err != nil {
+				break
 			}
 		}
 	}
-	return m, nil
+	return m, err
 }
 
 // getGroupTasks asynchronously gets a Group and its Tasks from the database
 func (u *GroupService) getGroupTasks(groupId string) (*models.GroupTasks, error) {
 	var m *models.GroupTasks
-	gOutCh := make(chan *models.Group)
-	gErrCh := make(chan error)
-	uOutCh := make(chan []*models.Task)
-	uErrCh := make(chan error)
-	go func() {
-		reG, err := u.groupDB.GroupFind(&models.Group{Id: groupId})
-		gOutCh <- reG
-		gErrCh <- err
+	ctx, cancel := context.WithCancel(context.Background())
+	groupChan := make(chan *models.Group)
+	tasksChan := make(chan []*models.Task)
+	errorChan := make(chan error)
+	defer func() {
+		cancel()
+		close(groupChan)
+		close(tasksChan)
+		close(errorChan)
 	}()
 	go func() {
-		reU, err := u.taskDB.TasksFind(&models.Task{GroupId: groupId})
-		uOutCh <- reU
-		uErrCh <- err
+		out, err := u.groupDB.GroupFind(&models.Group{Id: groupId})
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		groupChan <- out
+		errorChan <- err
 	}()
+	go func() {
+		out, err := u.taskDB.TasksFind(&models.Task{GroupId: groupId})
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		tasksChan <- out
+		errorChan <- err
+	}()
+	var err error
 	for i := 0; i < 4; i++ {
 		select {
-		case gOut := <-gOutCh:
-			m.Group = gOut
-		case gErr := <-gErrCh:
-			if gErr != nil {
-				return m, gErr
-			}
-		case uOut := <-uOutCh:
-			m.Tasks = uOut
-		case uErr := <-uErrCh:
-			if uErr != nil {
-				return m, uErr
+		case group := <-groupChan:
+			m.Group = group
+		case tasks := <-tasksChan:
+			m.Tasks = tasks
+		case err = <-errorChan:
+			if err != nil {
+				break
 			}
 		}
 	}
-	return m, nil
+	return m, err
 }
