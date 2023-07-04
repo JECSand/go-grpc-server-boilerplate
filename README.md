@@ -1,5 +1,5 @@
 # go-grpc-server-boilerplate
-A MongoDB gRPC Microservice written in GoLang.
+A MongoDB gRPC Microservice Boilerplate written in GoLang.
 
 ## Getting Started
 
